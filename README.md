@@ -13,7 +13,7 @@ A drop-in workflow template for teams building with multiple AI coding agents (C
 
 ---
 
-## What's included
+## What's included (v0.2.0)
 
 ```
 templates/          ← Drop into your project (run setup.sh)
@@ -33,8 +33,10 @@ openspec-templates/ ← Design documents for features
   design.md         ← How (architecture, decisions)
   tasks.md          ← Checklist mirroring Linear sub-issues
 
-linear-setup.md     ← How to configure Linear for CATMS
-setup.sh            ← Interactive init script
+linear-setup.md       ← How to configure Linear for CATMS
+linear-milestones.md  ← Phase gates, roadmap, sprint cycles
+update.sh             ← Pull latest CATMS templates into existing project
+setup.sh              ← Interactive init script (first time)
 ```
 
 ---
@@ -48,6 +50,31 @@ cd CATMS
 ```
 
 `setup.sh` will ask for your project name and paths, then copy all templates into the right places with your values substituted.
+
+---
+
+## Keeping templates up to date
+
+CATMS is versioned. When a new version ships, pull updates into your project:
+
+```bash
+# From inside your project directory
+/path/to/CATMS/update.sh
+
+# Or directly from GitHub
+curl -fsSL https://raw.githubusercontent.com/nagarajaabhishek/CATMS/main/update.sh | bash
+```
+
+**What gets updated automatically:**
+- `.cursor/rules/*.mdc` — overwritten (no project customisation)
+- `docs/GIT_WORKFLOW.md` — overwritten
+- `openspec-templates/*.md` — overwritten
+- New files from the new version — added
+
+**What needs manual review:**
+- `CLAUDE.md` and `CURSOR.md` — contain project-specific sections, diff and merge manually
+
+The script reads `.catms.json` in your project root to know your current version and project config.
 
 ---
 

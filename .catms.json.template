@@ -1,0 +1,10 @@
+{
+  "version": "v0.2.0",
+  "project": "{PROJECT_NAME}",
+  "github_user": "{GITHUB_USER}",
+  "linear_team_name": "{LINEAR_TEAM_NAME}",
+  "linear_team_id": "{LINEAR_TEAM_ID}",
+  "obsidian_vault_path": "{OBSIDIAN_VAULT_PATH}",
+  "catms_repo": "https://github.com/nagarajaabhishek/CATMS",
+  "setup_date": "{SETUP_DATE}"
+}

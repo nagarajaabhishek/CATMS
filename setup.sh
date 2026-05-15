@@ -128,7 +128,23 @@ echo "    ✓ Obsidian vault structure created"
 
 # ── Update CLAUDE.md global file (optional) ───────────────────────────────────
 
-echo "[3/4] Checking ~/.claude/CLAUDE.md ..."
+echo "[3/4] Writing .catms.json to $TARGET_DIR ..."
+CATMS_VERSION=$(cat "$CATMS_DIR/CHANGELOG.md" | grep "^## \[v" | head -1 | sed 's/## \[\(v[^]]*\)\].*/\1/')
+cat > "$TARGET_DIR/.catms.json" << JSONEOF
+{
+  "version": "$CATMS_VERSION",
+  "project": "$PROJECT_NAME",
+  "github_user": "$GITHUB_USER",
+  "linear_team_name": "$LINEAR_TEAM_NAME",
+  "linear_team_id": "$LINEAR_TEAM_ID",
+  "obsidian_vault_path": "$OBSIDIAN_VAULT_PATH",
+  "catms_repo": "https://github.com/nagarajaabhishek/CATMS",
+  "setup_date": "$(date +%Y-%m-%d)"
+}
+JSONEOF
+echo "    ✓ .catms.json written ($CATMS_VERSION)"
+
+echo "[3b/4] Checking ~/.claude/CLAUDE.md ..."
 if [ -f "$HOME/.claude/CLAUDE.md" ]; then
     echo "    ⚠  ~/.claude/CLAUDE.md already exists — skipping (update manually if needed)"
 else
