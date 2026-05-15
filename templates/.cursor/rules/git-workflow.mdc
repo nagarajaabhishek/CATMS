@@ -1,0 +1,37 @@
+---
+description: Branch discipline — one Linear issue per branch, PR to main, no direct pushes.
+alwaysApply: true
+---
+
+# Git: branches before multi-file work
+
+Full policy: [docs/GIT_WORKFLOW.md](../../docs/GIT_WORKFLOW.md)
+
+## Rules
+
+1. **Never commit directly to `main`** — always branch first
+2. **One Linear issue = one branch** — name: `feat/LOG-XX-description`
+3. **One concern per branch** — don't mix unrelated areas
+4. **Push the branch** after commits — `git push -u origin <branch>`
+5. **Merge via GitHub PR** — squash merge preferred
+6. **No force-push to `main`** without explicit human instruction
+7. **Never commit** `.env`, secrets, or machine-local IDE state
+
+## Branch naming
+
+| Prefix | Use for | Example |
+|--------|---------|---------|
+| `feat/` | New feature | `feat/LOG-42-auth-flow` |
+| `fix/` | Bug fix | `fix/LOG-51-secret-rotation` |
+| `chore/` | Tooling/deps | `chore/update-deps` |
+| `docs/` | Docs only | `docs/api-guide` |
+
+## Quick start
+
+```bash
+git fetch origin && git checkout main && git pull origin main
+git checkout -b feat/LOG-XX-short-description
+# ... work ...
+git push -u origin feat/LOG-XX-short-description
+# Open PR → main on GitHub
+```
