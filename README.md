@@ -32,17 +32,20 @@ This is what makes "lazy context loading" (below) fast: agents read `log.md` for
 
 ---
 
-## What's included (v0.3.0)
+## What's included (v0.4.0)
 
 ```
-templates/          ← Drop into your project (run setup.sh)
+bin/catms.js        ← CLI entry point (init | update | --version | --help)
+lib/                ← CLI implementation (no runtime dependencies, Node builtins only)
+
+templates/          ← Copied into your project by `catms init`
   AGENTS.md         ← Canonical rules — read natively by Cursor, Antigravity, Codex, Windsurf
   CLAUDE.md         ← Thin wrapper: @AGENTS.md import + Claude Code specifics
   CURSOR.md         ← Thin wrapper: Cursor+Claude coordination specifics
   .cursor/rules/    ← Auto-applied Cursor rules (.mdc) — point at AGENTS.md
   docs/             ← Git workflow, pre-commit checklist
 
-obsidian-template/  ← Copy into your Obsidian vault
+obsidian-template/  ← Copied into your Obsidian vault
   context/          ← active-projects.md
   projects/{name}/  ← Per-project memory structure (OKF-formatted: index.md, log.md, frontmatter)
 
@@ -54,8 +57,6 @@ openspec-templates/ ← Design documents for features
 
 linear-setup.md       ← How to configure Linear for CATMS
 linear-milestones.md  ← Phase gates, roadmap, sprint cycles
-update.sh             ← Pull latest CATMS templates into existing project
-setup.sh              ← Interactive init script (first time)
 ```
 
 ---
@@ -63,37 +64,41 @@ setup.sh              ← Interactive init script (first time)
 ## Quick start
 
 ```bash
-git clone https://github.com/nagarajaabhishek/CATMS.git
-cd CATMS
-./setup.sh
+npm install -g catms   # or: npx catms init (no global install)
+catms init
 ```
 
-`setup.sh` will ask for your project name and paths, then copy all templates into the right places with your values substituted.
+> Not yet published to npm. Until then, run it from a local clone:
+> ```bash
+> git clone https://github.com/nagarajaabhishek/CATMS.git
+> cd CATMS && npm link
+> cd /path/to/your-project && catms init
+> ```
+
+`catms init` asks for your project name and paths, then copies all templates into the right places with your values substituted.
+
+**If `AGENTS.md`/`CLAUDE.md`/`CURSOR.md` already exist** in your project (e.g. you already had your own `AGENTS.md` for another tool), `catms init` won't overwrite them — it appends a clearly marked, delimited CATMS block to the end of the existing file instead, leaving everything above it untouched.
 
 ---
 
 ## Keeping templates up to date
 
-CATMS is versioned. When a new version ships, pull updates into your project:
+CATMS is versioned via npm. When a new version ships:
 
 ```bash
 # From inside your project directory
-/path/to/CATMS/update.sh
-
-# Or directly from GitHub
-curl -fsSL https://raw.githubusercontent.com/nagarajaabhishek/CATMS/main/update.sh | bash
+catms update
 ```
 
 **What gets updated automatically:**
-- `.cursor/rules/*.mdc` — overwritten (no project customisation)
-- `docs/GIT_WORKFLOW.md` — overwritten
-- `openspec-templates/*.md` — overwritten
+- `.cursor/rules/*.mdc`, `docs/GIT_WORKFLOW.md`, `openspec-templates/*.md` — overwritten (no project customisation expected)
+- `AGENTS.md` / `CLAUDE.md` / `CURSOR.md` — only the CATMS-managed block (between `<!-- CATMS:BEGIN -->` / `<!-- CATMS:END -->` markers) is replaced; anything you added outside those markers is preserved
 - New files from the new version — added
 
 **What needs manual review:**
-- `CLAUDE.md` and `CURSOR.md` — contain project-specific sections, diff and merge manually
+- `AGENTS.md`/`CLAUDE.md`/`CURSOR.md` from a project set up with the old bash-script era (`setup.sh`/`update.sh`, pre-v0.4.0) — those files predate the marker format, so `catms update` prints a diff hint instead of guessing where to merge
 
-The script reads `.catms.json` in your project root to know your current version and project config.
+`catms update` reads `.catms.json` in your project root to know your current version and project config.
 
 ---
 
@@ -131,7 +136,7 @@ All Linear issues use the prefix pattern: `[P1][You]` or `[P1][Agent]`
 
 ## Placeholders in templates
 
-When running `setup.sh`, these are replaced with your values:
+When running `catms init`, these are replaced with your values:
 
 | Placeholder | Replaced with |
 |-------------|--------------|

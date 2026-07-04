@@ -5,6 +5,21 @@ Format: `## [version] — YYYY-MM-DD`
 
 ---
 
+## [v0.4.0] — 2026-07-04
+
+### Added
+- `catms` npm CLI (`bin/catms.js` + `lib/`) — `catms init` and `catms update` replace `setup.sh`/`update.sh`. No runtime dependencies (Node builtins only: `readline`, `fs`, `path`).
+- Marker-delimited managed blocks (`<!-- CATMS:BEGIN -->` / `<!-- CATMS:END -->`) for `AGENTS.md`, `CLAUDE.md`, `CURSOR.md`: `catms init` appends rather than overwrites if these files already exist with non-CATMS content; `catms update` replaces only the marked block, preserving anything a project added outside it.
+- `package.json` — versioning now driven by npm/semver instead of parsing `CHANGELOG.md`; `.catms.json` read/written with `JSON.parse`/`fs.writeFileSync` instead of shelling out to `python3`.
+
+### Removed
+- `setup.sh`, `update.sh` — replaced entirely by the CLI. Projects set up under the old bash scripts are still supported by `catms update` (it falls back to a manual-diff hint for files that predate the marker format).
+
+### Changed
+- `README.md` — install/update instructions now `npm install -g catms` / `npx catms init` (not yet published; `npm link` from a local clone until then).
+
+---
+
 ## [v0.3.0] — 2026-07-04
 
 ### Added
