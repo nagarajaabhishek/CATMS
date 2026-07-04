@@ -64,11 +64,13 @@ linear-milestones.md  ← Phase gates, roadmap, sprint cycles
 ## Quick start
 
 ```bash
-npm install -g catms   # or: npx catms init (no global install)
+npm install -g @abhishek.nagaraja/catms   # or: npx @abhishek.nagaraja/catms init
 catms init
 ```
 
-> Not yet published to npm. Until then, run it from a local clone:
+> Published scoped (`@abhishek.nagaraja/catms`) — npm's anti-typosquatting check flagged the unscoped `catms` name as too similar to the existing `nats` package. The installed command is still just `catms`, only the package name on the registry is scoped.
+>
+> Until you've installed it, you can also run it from a local clone:
 > ```bash
 > git clone https://github.com/nagarajaabhishek/CATMS.git
 > cd CATMS && npm link
