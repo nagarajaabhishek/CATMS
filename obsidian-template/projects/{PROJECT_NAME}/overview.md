@@ -1,3 +1,11 @@
+---
+type: Project Overview
+title: {PROJECT_NAME} — Overview
+description: What {PROJECT_NAME} is, its stack, and current phase
+tags: [overview]
+timestamp: {SETUP_DATE}
+---
+
 # {PROJECT_NAME} — Overview
 
 **Linear Project:** {LINEAR_PROJECT_URL}

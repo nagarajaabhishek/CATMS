@@ -1,3 +1,11 @@
+---
+type: Context Topic
+title: {PROJECT_NAME} — Accumulated Context
+description: Durable project facts — architecture, env, decisions, gotchas
+tags: [context]
+timestamp: {SETUP_DATE}
+---
+
 # {PROJECT_NAME} — Accumulated Context
 
 > Single source of truth for project memory. Append new facts after each session.

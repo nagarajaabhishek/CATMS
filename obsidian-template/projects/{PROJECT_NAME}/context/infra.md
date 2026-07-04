@@ -1,3 +1,11 @@
+---
+type: Context Topic
+title: {PROJECT_NAME} — Infrastructure Context
+description: Deployment, CI/CD, servers, and environment config
+tags: [context, infra]
+timestamp: {SETUP_DATE}
+---
+
 # {PROJECT_NAME} — Infrastructure Context
 
 > Read this file only when working on deployment, CI/CD, servers, or environment config.

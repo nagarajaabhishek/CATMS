@@ -35,6 +35,7 @@ LINEAR_TEAM_NAME=$(python3 -c "import json; d=json.load(open('.catms.json')); pr
 LINEAR_TEAM_ID=$(python3 -c "import json; d=json.load(open('.catms.json')); print(d['linear_team_id'])")
 OBSIDIAN_VAULT_PATH=$(python3 -c "import json; d=json.load(open('.catms.json')); print(d['obsidian_vault_path'])")
 GITHUB_USER=$(python3 -c "import json; d=json.load(open('.catms.json')); print(d['github_user'])")
+SETUP_DATE=$(python3 -c "import json; d=json.load(open('.catms.json')); print(d.get('setup_date', ''))")
 
 echo "Project:         $PROJECT_NAME"
 echo "Current version: $CURRENT_VERSION"
@@ -76,6 +77,7 @@ apply_placeholders() {
         -e "s|{LINEAR_TEAM_NAME}|$LINEAR_TEAM_NAME|g" \
         -e "s|{LINEAR_TEAM_ID}|$LINEAR_TEAM_ID|g" \
         -e "s|{OBSIDIAN_VAULT_PATH}|$OBSIDIAN_VAULT_PATH|g" \
+        -e "s|{SETUP_DATE}|$SETUP_DATE|g" \
         "$file"
     rm -f "$file.bak"
 }
@@ -118,13 +120,29 @@ if [ ! -f "$PROJECT_DIR/docs/linear-milestones.md" ] && [ -f "$CATMS_DIR/linear-
     echo "  ✓ Added docs/linear-milestones.md (new in $LATEST_VERSION)"
 fi
 
-# ── Merge CLAUDE.md — add new sections, preserve existing ────────────────────
+# AGENTS.md (new in v0.3.0) — only add if missing, never overwrite
+if [ ! -f "$PROJECT_DIR/AGENTS.md" ] && [ -f "$CATMS_DIR/templates/AGENTS.md" ]; then
+    cp "$CATMS_DIR/templates/AGENTS.md" "$PROJECT_DIR/AGENTS.md"
+    apply_placeholders "$PROJECT_DIR/AGENTS.md"
+    echo "  ✓ Added AGENTS.md (new in $LATEST_VERSION) — canonical parent, read natively by Cursor/Antigravity"
+fi
+
+# ── Merge CLAUDE.md / CURSOR.md — add new sections, preserve existing ────────
 
 echo ""
 echo "  ℹ  CLAUDE.md and CURSOR.md contain project-specific content."
 echo "     Review the diff and merge manually if needed:"
 echo "     diff $PROJECT_DIR/CLAUDE.md $CATMS_DIR/templates/CLAUDE.md"
+echo "     diff $PROJECT_DIR/CURSOR.md $CATMS_DIR/templates/CURSOR.md"
 echo ""
+if [ -f "$PROJECT_DIR/AGENTS.md" ]; then
+    echo "  ⚠  As of v0.3.0, AGENTS.md is the canonical source — CLAUDE.md should just"
+    echo "     import it with '@AGENTS.md' plus Claude-Code-only notes. If your"
+    echo "     CLAUDE.md still duplicates the full workflow, migrate it to the thin"
+    echo "     form manually (see templates/CLAUDE.md for the target shape) so the"
+    echo "     workflow isn't defined in two places that can drift apart."
+    echo ""
+fi
 
 # ── Update .catms.json version ────────────────────────────────────────────────
 
@@ -147,9 +165,9 @@ echo "║  Updated $PROJECT_NAME to CATMS $LATEST_VERSION"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
 echo "Next steps:"
-echo "  1. Review CLAUDE.md and CURSOR.md manually for new sections"
+echo "  1. Review CLAUDE.md and CURSOR.md manually for new sections (see AGENTS.md note above)"
 echo "  2. Commit the updated files:"
-echo "     git add .cursor/rules/ docs/ .catms.json"
+echo "     git add .cursor/rules/ docs/ .catms.json AGENTS.md"
 echo "     git commit -m 'chore: update CATMS templates to $LATEST_VERSION'"
 echo ""
 echo "Full changelog: $CATMS_DIR/CHANGELOG.md"

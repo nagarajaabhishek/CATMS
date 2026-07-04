@@ -5,6 +5,26 @@ Format: `## [version] — YYYY-MM-DD`
 
 ---
 
+## [v0.3.0] — 2026-07-04
+
+### Added
+- `templates/AGENTS.md` — canonical, tool-agnostic rules file. Read natively by Cursor, Google Antigravity, Codex, and Windsurf; no setup required for those tools.
+- OKF (Google's [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) v0.1) applied to `obsidian-template/projects/{name}/`: YAML frontmatter on concept docs, plus new `index.md` (progressive-disclosure listing) and `log.md` (reverse-chronological session summary) templates.
+- `{SETUP_DATE}` placeholder — auto-filled with today's date by `setup.sh`/`update.sh`.
+- `setup.sh`/`update.sh` — copy and version `AGENTS.md`, `index.md`, `log.md`.
+
+### Changed
+- `templates/CLAUDE.md` — now a thin file (`@AGENTS.md` import + Claude Code-only notes) instead of duplicating the full workflow.
+- `templates/CURSOR.md` — now only covers Cursor+Claude coordination specifics (session-log suffix, claim/handoff agent name); the rest moved to `AGENTS.md`.
+- `templates/.cursor/rules/workflow.mdc` — trimmed to a pointer at `AGENTS.md` instead of a third copy of the same workflow.
+- Session-start "Step 2" (topic-file lookup) replaced by reading `index.md`.
+- `README.md` — reflects the `AGENTS.md`-as-parent architecture, multi-agent support (Cursor/Antigravity), and OKF documentation format.
+
+### Migration notes (existing projects)
+- Run `update.sh` — it adds `AGENTS.md` if missing and prints a reminder to migrate `CLAUDE.md`/`CURSOR.md` to the thin form manually (not automated, since those files carry project-specific customization).
+
+---
+
 ## [v0.2.0] — 2026-05-15
 
 ### Added

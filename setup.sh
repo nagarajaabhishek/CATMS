@@ -41,6 +41,8 @@ read -p "Proceed? [y/N]: " CONFIRM
 
 # ── Helper: replace placeholders in a file ───────────────────────────────────
 
+SETUP_DATE=$(date +%Y-%m-%d)
+
 replace_placeholders() {
     local file="$1"
     sed -i.bak \
@@ -50,6 +52,7 @@ replace_placeholders() {
         -e "s|{LINEAR_TEAM_ID}|$LINEAR_TEAM_ID|g" \
         -e "s|{OBSIDIAN_VAULT_PATH}|$OBSIDIAN_VAULT_PATH|g" \
         -e "s|{DROPLET_IP}|${DROPLET_IP:-YOUR_SERVER_IP}|g" \
+        -e "s|{SETUP_DATE}|$SETUP_DATE|g" \
         "$file"
     rm -f "$file.bak"
 }
@@ -61,6 +64,7 @@ echo "[1/4] Copying templates to $TARGET_DIR ..."
 mkdir -p "$TARGET_DIR"
 
 # Copy template files
+cp "$CATMS_DIR/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
 cp "$CATMS_DIR/templates/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
 cp "$CATMS_DIR/templates/CURSOR.md" "$TARGET_DIR/CURSOR.md"
 
@@ -76,6 +80,7 @@ cp "$CATMS_DIR/openspec-templates/"*.md "$TARGET_DIR/docs/design/openspec-templa
 
 # Replace placeholders
 for f in \
+    "$TARGET_DIR/AGENTS.md" \
     "$TARGET_DIR/CLAUDE.md" \
     "$TARGET_DIR/CURSOR.md" \
     "$TARGET_DIR/.cursor/rules/workflow.mdc" \
@@ -106,7 +111,7 @@ if [ ! -f "$OBSIDIAN_VAULT_PATH/context/active-projects.md" ]; then
     replace_placeholders "$OBSIDIAN_VAULT_PATH/context/active-projects.md"
 fi
 
-for tmpl in overview.md context.md; do
+for tmpl in overview.md context.md index.md log.md; do
     if [ ! -f "$VAULT_PROJECT/$tmpl" ]; then
         cp "$CATMS_DIR/obsidian-template/projects/{PROJECT_NAME}/$tmpl" "$VAULT_PROJECT/$tmpl"
         replace_placeholders "$VAULT_PROJECT/$tmpl"
@@ -170,8 +175,9 @@ echo "  2. Add MCP tools to Claude Code:"
 echo "     → claude mcp add -s user linear-mcp (with LINEAR_API_KEY)"
 echo "     → claude mcp add -s user obsidian-mcp (with OBSIDIAN_VAULT_PATH)"
 echo ""
-echo "  3. Open your project in Cursor:"
-echo "     → .cursor/rules/*.mdc will auto-apply to every chat"
+echo "  3. Open your project in Cursor or Google Antigravity:"
+echo "     → both read AGENTS.md natively, no extra setup needed"
+echo "     → Cursor also auto-applies .cursor/rules/*.mdc to every chat"
 echo ""
 echo "  4. Start your first session:"
 echo "     → Read $OBSIDIAN_VAULT_PATH/context/active-projects.md"
