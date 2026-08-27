@@ -1,6 +1,6 @@
 # Specs — {CHANGE_NAME}
 
-**Linear issue:** {ISSUE_ID}
+**Task ID:** {TASK_ID}
 **Depends on:** proposal.md approved
 
 ---

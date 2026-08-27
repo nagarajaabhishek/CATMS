@@ -1,29 +1,21 @@
 # Agent Workflow — {PROJECT_NAME}
 
-This is the canonical, tool-agnostic instructions file for every AI coding agent working in this repo. **Cursor**, **Google Antigravity**, **Codex**, **Windsurf**, and any other tool that reads `AGENTS.md` natively will load this file directly, live, every session. **Claude Code** does not read `AGENTS.md` natively; `CLAUDE.md` in this repo imports it with `@AGENTS.md` and adds Claude-Code-only notes.
+This is the canonical, tool-agnostic instructions file for every AI coding agent working in this repo. **Cursor**, **Google Antigravity**, **Codex**, **Windsurf**, and any other tool that reads `AGENTS.md` natively will load this file directly, live, every session. **Claude Code** does not read `AGENTS.md` natively; `CLAUDE.md` in this repo imports it with `@AGENTS.md` and adds Claude-Code-only notes (including four extra skills — see that file).
 
-Multiple agents and humans share this codebase. **Chat is ephemeral** — the next session or the other agent will not read this conversation. Anything another agent needs must live in **Linear** (tasks/state) or the **Obsidian vault** (context/history), never only in chat.
+Multiple agents and humans share this codebase. **Chat is ephemeral** — the next session or the other agent will not read this conversation. Anything another agent needs must live in local trackers (`tasks.md`, `sprint.md`, `decision.md`) or the semantic memory layer (**CAMS RAG**), never only in chat.
 
 ---
 
 ## Tools Available
 
-- **Linear** — task lifecycle management (`Backlog` → `Design & Docs` → `In Development` → `Testing & QA` → `In Review` → `Ready to Deploy` → `Deployed`)
-- **Obsidian vault** (`{OBSIDIAN_VAULT_PATH}`) — session memory, design docs, ADRs
+- **tasks.md** — the canonical project backlog. One master task tracker at the root of the workspace.
+- **sprint.md** — tracks active, planned, and completed sprints.
+- **decision.md** — tracks settled architecture and product design decisions.
+- **log.md** & **sessions/** — reverse-chronological session logs and narrative histories.
+- **CAMS** — Coding Agent Memory System. A local, lightweight semantic memory layer running as an MCP server.
+  - Tools: `cams_query` (search memory), `cams_ingest` (save a fact), `cams_backfill` (sync tracker files to memory).
 
-Don't worry about whether an Obsidian MCP server is connected. The vault is just a folder of markdown files — read and write them directly at `{OBSIDIAN_VAULT_PATH}/projects/{PROJECT_NAME}/...` with your normal file tools. MCP (if present) is a convenience layer for backlinks/graph view inside the Obsidian app; it is never required for this workflow.
-
----
-
-## Documentation Format — OKF
-
-All docs under `{OBSIDIAN_VAULT_PATH}/projects/{PROJECT_NAME}/` conform to Google's [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) v0.1 — plain markdown, no tooling required:
-
-- Every concept doc (`overview.md`, `context.md`, `context/*.md`) carries YAML frontmatter: `type`, `title`, `description`, `tags`, `timestamp`. Unknown fields must be preserved, nothing is centrally registered.
-- `index.md` (reserved filename) — progressive-disclosure directory listing for a folder. No frontmatter except `okf_version: "0.1"` at the project root's `index.md`.
-- `log.md` (reserved filename) — reverse-chronological, one line per session, newest first. Points at the full `sessions/YYYY-MM-DD.md` entry.
-
-This is what makes lazy loading below fast: `log.md` tells you what happened most recently without listing a directory; `index.md` tells you what exists without opening every file.
+Always query CAMS (`cams_query`) before assuming something is unknown, stale, or still true. Run `cams_backfill` to sync memory after editing tracker files.
 
 ---
 
@@ -32,142 +24,83 @@ This is what makes lazy loading below fast: `log.md` tells you what happened mos
 **Load only what you need. Never read everything upfront.**
 
 **Step 1 — Always (mandatory, fast):**
-1. Read `{OBSIDIAN_VAULT_PATH}/context/active-projects.md` — current phase + next action
-2. Read the top entry of `projects/{PROJECT_NAME}/log.md` — what happened last session
+1. Read the top entry of `log.md` — what happened last session.
+2. Query CAMS (`cams_query`) for specific details instead of opening full historical session files.
+3. Read the Priority Queue or active sprint tasks in `tasks.md` when picking up new work.
 
-**Step 2 — Only if needed for the task:**
-- Read `projects/{PROJECT_NAME}/index.md` — lists what's available and where (overview, topic context files, design docs, sessions) — follow only the link relevant to the current task.
-
-**Step 3 — Linear: search narrow, not broad:**
-- Filter by **project**, **state**, or **identifier**
-- States priority: `In Development` → `Blocked` → `Testing & QA`
-- Never fetch all issues — max 10–15 at a time
-
-**Step 4 — Work:**
-- If unclear what to work on, ask — unless told to "continue" or "pick up Linear tasks", then pick the highest-value `In Development` issue.
+**Step 2 — Work:**
+- Check for unclaimed tasks in the Priority Queue or active sprint.
+- Claim a task by setting `owner` to your agent handle (e.g. `@claude` or `@cursor`) and updating `updated` to today's date.
 
 ---
 
 ## Token Efficiency Rules
 
-**Short sessions over long ones.** One conversation per distinct task.
-
-**Lazy tool calls.** Only call tools when you actually need the output.
-
-**Specific Linear searches.** Always filter — never fetch all issues without a filter.
+- **Short sessions over long ones.** One conversation per distinct task.
+- **Lazy tool calls.** Only call tools when you actually need the output.
+- **Query CAMS** rather than reading full log/sprint/decision trackers.
 
 ---
 
-## Git Branch Workflow
+## Branch discipline
 
-**Every feature or fix gets its own branch — never commit directly to `main`.**
+Full rules: `docs/BRANCHING.md` (applied automatically by the `task-kickoff` skill in Claude Code). **Every feature or fix gets its own branch — never commit directly to the integration branch.**
 
-```bash
-git fetch origin && git checkout main && git pull origin main
-git checkout -b feat/LOG-XX-short-description
-# ... commit work ...
-git push -u origin feat/LOG-XX-short-description
-# Open PR → main on GitHub
-```
+Every task branch starts with a **collision check** — `cams_query` what's currently `In Progress` in this repo and what it touches, before cutting the branch. See `docs/BRANCHING.md` → Branch origin & dependency rules for the full mechanism, including `depends_on`/`blocks_on` and the `park/` branch prefix for shelved work.
 
-| Prefix | Use for | Example |
-|--------|---------|---------|
-| `feat/` | New feature | `feat/LOG-42-auth-flow` |
-| `fix/` | Bug fix | `fix/LOG-51-secret-rotation` |
-| `chore/` | Tooling, deps | `chore/update-requirements` |
-| `docs/` | Docs only | `docs/api-guide` |
-
-**Rules:**
-- One Linear issue = one branch
-- Never force-push `main`
-- Never commit `.env` files or secrets
-- Squash merge PRs, delete branch after merge
+**No agent merges into the integration branch/`main` or deletes a branch without asking first** — every merge is a proposed PR, every deletion happens only after a user-approved merge.
 
 ---
 
-## Autonomous Task Ownership
+## Sprint Workflow
 
-### Claim comment (when starting an issue)
-```
-**Agent:** {your agent name — e.g. Claude Code, Cursor, Antigravity}
-**Action:** Claimed — in progress
-**When:** YYYY-MM-DD
-**Plan:** one line (optional)
-```
-Move issue → `In Development`.
-
-### Handoff comment (when finishing or pausing)
-```
-**Agent:** {your agent name}
-**Outcome:** Completed | Partial | Blocked
-**Summary:** what changed (2–4 sentences)
-**Work done:** bullets — files, migrations, config
-**Verification:** tests run or not (why)
-**Follow-ups:** issue IDs or none
-**Phase:** what you set
-```
+Full rules: `docs/SPRINT-WORKFLOW.md`. A sprint is a cross-repo/cross-cutting initiative tracked in `sprint.md`, separate from `tasks.md`'s per-repo state-of-record. **Only one sprint may be `Active` at a time** — see `docs/SPRINT-WORKFLOW.md` → Single active sprint for the WIP limit, exemptions, and enforcement.
 
 ---
 
-## During Work — Keep Linear + Obsidian in Sync
+## Autonomous Task Ownership & Tracking
 
-| When | Linear | Obsidian |
-|------|--------|----------|
-| Starting a task | Post claim comment; move → `In Development` | Note in session log |
-| Architecture decision | — | Write ADR in `projects/{PROJECT_NAME}/design/decisions/` |
-| Blocker hit | Mark → `Blocked` | Note blocker in session log |
-| Dev done | Move → `Testing & QA` | — |
-| Bug found | Create issue (label `Bug`) | Write bug report in `testing/bugs/` |
-| Tests passing | Move → `In Review` | — |
-| Deployed | Move → `Deployed` | — |
+### Claim
+Before starting a backlog task, move it to `In Progress` (under the appropriate repo/component section in `tasks.md`), set `owner` to your handle (e.g., `@claude` or `@cursor`), and set `updated` to today's date (`YYYY-MM-DD`). Before creating the branch (see Branch discipline above), run the collision check and tag the line with `branch: <name>` — in Claude Code, the `task-kickoff` skill does all of this as one step, including for tasks that start as pure investigation.
+
+### Handoff
+Before pausing or finishing, update the task in place (move to `Done` or add notes if blocked) and write the actual execution narrative in the session log under `sessions/YYYY-MM-DD.md`.
+
+---
+
+## During Work — Keep Trackers in Sync
+
+| Event | trackers / tasks.md | Session log / CAMS |
+|-------|--------------------|--------------------|
+| Starting a task | → `In Progress`, set `owner` and `updated` | Note it in session log |
+| Architecture decision | Add entry in `decision.md` | `cams_ingest` the decision |
+| Blocker hit | Mark as `🔴 Blocked` with details | Note blocker in session log |
+| Bug found | Add to `Backlog` in `tasks.md` | Write details in session log |
+| Task done | Check off and move to `Done` | Run `cams_backfill` at session end |
 
 ---
 
 ## Every Session — End
 
-1. Write session log at `projects/{PROJECT_NAME}/sessions/YYYY-MM-DD.md`
-2. Prepend a one-line entry to `projects/{PROJECT_NAME}/log.md`
-3. Append new facts to `projects/{PROJECT_NAME}/context/{topic}.md`
-4. Update `projects/{PROJECT_NAME}/index.md` if new docs were added
-5. Update `context/active-projects.md`
-6. Ensure all worked-on Linear issues reflect correct phase
+1. Write session log at `sessions/YYYY-MM-DD.md` (or `sessions/YYYY-MM-DD-cursor.md` for Cursor).
+2. Prepend a one-liner entry to `log.md`.
+3. If you made/found any durable decisions or facts, run `cams_ingest`.
+4. Run `cams_backfill` to sync all updated trackers into CAMS.
 
 ---
 
-## Linear Team + Projects
+## Planning — Always Parallel: trackers + design specs
 
-- **Team:** {LINEAR_TEAM_NAME} (ID: `{LINEAR_TEAM_ID}`)
-- **Projects:** one per repo/codebase
-- **Issue naming:** `[P1][You]` or `[P1][Agent]` prefix
-  - P1/P2/P3/P4 = phase priority
-  - [You] = human action, [Agent] = AI handles it
-
----
-
-## Planning — Always Parallel: Linear + Obsidian
-
-New feature or large fix → create **both** simultaneously:
-
-1. **Linear** — parent issue + sub-issues
-2. **Obsidian** — OpenSpec under `projects/{PROJECT_NAME}/design/changes/{change-name}/`
+For large features (3+ steps, design decisions):
+1. Create one linking line in `tasks.md` pointing to the specs.
+2. Create OpenSpec files under `docs/design/changes/{change-name}/` (using templates from `docs/design/openspec-templates/`):
    - `proposal.md` → Why
    - `specs.md` → What
    - `design.md` → How
-   - `tasks.md` → Checklist (mirrors Linear sub-issues)
-
----
-
-## Lifecycle Phases
-
-`Backlog` → `Design & Docs` → `In Development` → `Testing & QA` → `In Review` → `Ready to Deploy` → `Deployed`
-
-Also: `Blocked` 🔴, `Cancelled`, `Ongoing` (standing/long-lived issues)
+   - `tasks.md` → Component checklist
 
 ---
 
 ## Project Setup (new projects)
 
-1. Create Linear project for the repo
-2. Create `projects/{PROJECT_NAME}/` in Obsidian vault
-3. Create folder structure (`sessions/`, `design/`, `testing/bugs/`), plus `index.md` and `log.md`
-4. Add to `context/active-projects.md`
+`catms init` sets all of this up in one pass: trackers (`tasks.md`/`sprint.md`/`decision.md`/`log.md`/`sessions/`), `docs/BRANCHING.md` (single- or two-stage, chosen at init) and `docs/SPRINT-WORKFLOW.md`, `tools/cams/`, and (in Claude Code) the four skills. Run CAMS backfill afterward to seed initial project memory. For a new repo joining an existing multi-repo workspace, add its section to the shared `tasks.md` and add it to `.catms.json`'s `repos` field so `scripts/branch-audit.sh` picks it up.

@@ -1,37 +1,42 @@
 ---
-description: Branch discipline — one Linear issue per branch, PR to main, no direct pushes.
+description: Branch discipline — one tasks.md task per branch, collision check via CAMS before branching, PR to the integration branch, no direct pushes.
 alwaysApply: true
 ---
 
 # Git: branches before multi-file work
 
-Full policy: [docs/GIT_WORKFLOW.md](../../docs/GIT_WORKFLOW.md)
+Full policy: [docs/BRANCHING.md](../../docs/BRANCHING.md)
 
 ## Rules
 
-1. **Never commit directly to `main`** — always branch first
-2. **One Linear issue = one branch** — name: `feat/LOG-XX-description`
-3. **One concern per branch** — don't mix unrelated areas
-4. **Push the branch** after commits — `git push -u origin <branch>`
-5. **Merge via GitHub PR** — squash merge preferred
-6. **No force-push to `main`** without explicit human instruction
-7. **Never commit** `.env`, secrets, or machine-local IDE state
+1. **Never commit directly to the integration branch (`{INTEGRATION_BRANCH}`)** — always branch first
+2. **One task = one branch** — name: `feat/{id}-description`
+3. **Collision check first** — `cams_query` what's `In Progress` in this repo and what it touches before cutting the branch. Same file/surface, no declared order → add `depends_on` or ask which goes first, don't silently branch and hope
+4. **One concern per branch** — don't mix unrelated areas
+5. **Push the branch** after commits — `git push -u origin <branch>`
+6. **Merge via GitHub PR** — squash merge preferred
+7. **No agent merges or deletes branches autonomously** — always propose via PR or ask first
+8. **No force-push to `{INTEGRATION_BRANCH}`/`main`** without explicit human instruction
+9. **Never commit** `.env`, secrets, or machine-local IDE state
 
 ## Branch naming
 
 | Prefix | Use for | Example |
 |--------|---------|---------|
-| `feat/` | New feature | `feat/LOG-42-auth-flow` |
-| `fix/` | Bug fix | `fix/LOG-51-secret-rotation` |
+| `feat/` | New feature | `feat/{PROJECT_NAME}-42-auth-flow` |
+| `fix/` | Bug fix | `fix/{PROJECT_NAME}-51-secret-rotation` |
 | `chore/` | Tooling/deps | `chore/update-deps` |
 | `docs/` | Docs only | `docs/api-guide` |
+| `park/` | Shelved/parked work | `park/apiV2-explore` |
 
 ## Quick start
 
 ```bash
-git fetch origin && git checkout main && git pull origin main
-git checkout -b feat/LOG-XX-short-description
+git fetch origin && git checkout {INTEGRATION_BRANCH} && git pull origin {INTEGRATION_BRANCH}
+git checkout -b feat/{id}-short-description
 # ... work ...
-git push -u origin feat/LOG-XX-short-description
-# Open PR → main on GitHub
+git push -u origin feat/{id}-short-description
+# Open PR on GitHub
 ```
+
+In Claude Code, the `task-kickoff` skill runs all of this (claim, collision check, branch origin, migration-number check) automatically — see `.claude/skills/task-kickoff/SKILL.md`.

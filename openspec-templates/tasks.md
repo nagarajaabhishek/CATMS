@@ -1,27 +1,27 @@
 # Tasks — {CHANGE_NAME}
 
-**Parent Linear issue:** {ISSUE_ID}
+**Parent Task ID:** {TASK_ID}
 **Depends on:** design.md approved
 
-> Each task below = one Linear sub-issue. Create them in Linear before starting work.
-> Check off here as Linear issues are completed.
+> Each task below = one sub-task in tasks.md.
+> Check off here as tasks are completed.
 
 ---
 
 ## Implementation Tasks
 
-- [ ] {ISSUE_ID}-1 — (task description) — `[Agent]`
-- [ ] {ISSUE_ID}-2 — (task description) — `[Agent]`
-- [ ] {ISSUE_ID}-3 — (task description) — `[You]`
+- [ ] {TASK_ID}-1 — (task description) — `[Agent]`
+- [ ] {TASK_ID}-2 — (task description) — `[Agent]`
+- [ ] {TASK_ID}-3 — (task description) — `[You]`
 
 ## Testing Tasks
 
-- [ ] {ISSUE_ID}-4 — (smoke test description) — `[You]`
-- [ ] {ISSUE_ID}-5 — (E2E test description) — `[You]`
+- [ ] {TASK_ID}-4 — (smoke test description) — `[You]`
+- [ ] {TASK_ID}-5 — (E2E test description) — `[You]`
 
 ## Deployment Tasks
 
-- [ ] {ISSUE_ID}-6 — (migration/config step) — `[You]`
+- [ ] {TASK_ID}-6 — (migration/config step) — `[You]`
 
 ---
 
@@ -30,5 +30,5 @@
 - [ ] All implementation tasks checked off
 - [ ] All tests pass
 - [ ] Deployed to production
-- [ ] Linear parent issue moved to `Deployed`
-- [ ] Obsidian `specs.md` merged into `design/specs.md`
+- [ ] Parent task checked off in tasks.md
+- [ ] OpenSpec changes documented / archived

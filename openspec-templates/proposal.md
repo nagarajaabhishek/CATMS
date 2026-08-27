@@ -1,6 +1,6 @@
 # Proposal — {CHANGE_NAME}
 
-**Linear issue:** {ISSUE_ID}
+**Task ID:** {TASK_ID}
 **Date:** YYYY-MM-DD
 **Status:** Draft | Approved | Rejected
 

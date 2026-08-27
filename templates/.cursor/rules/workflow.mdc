@@ -1,12 +1,12 @@
 ---
-description: Collaborative AI coding — Linear for tasks, Obsidian for context, lazy loading, mandatory sync.
+description: Collaborative AI coding — local trackers for tasks/decisions, CAMS RAG for project memory.
 alwaysApply: true
 ---
 
-# {PROJECT_NAME} — collaborative AI coding (Linear + Obsidian)
+# {PROJECT_NAME} — collaborative AI coding (trackers + CAMS)
 
-Multiple agents (Cursor, Claude Code) and humans share this codebase. **Chat is ephemeral.** Anything the next agent needs must live in **Linear** (tasks) or **Obsidian** (context/memory).
+Multiple agents (Cursor, Claude Code) and humans share this codebase. **Chat is ephemeral.** Anything the next agent needs must live in local trackers (`tasks.md`, `sprint.md`, `decision.md`) or the **CAMS** semantic memory layer.
 
-The full workflow — lazy loading, token efficiency, git branching, Linear conventions, claim/handoff templates, OKF documentation format — is defined once in **[AGENTS.md](../../AGENTS.md)**. This rule just guarantees it's always loaded into every Cursor chat; see that file for the actual content.
+The full workflow — lazy loading, token efficiency, git branching (`docs/BRANCHING.md`), sprint workflow (`docs/SPRINT-WORKFLOW.md`), tracker conventions, claim/handoff fields — is defined once in **[AGENTS.md](../../AGENTS.md)**. This rule just guarantees it's always loaded into every Cursor chat; see that file for the actual content.
 
 Cursor-only note: session logs are written as `sessions/YYYY-MM-DD-cursor.md` (see [CURSOR.md](../../CURSOR.md)).

@@ -1,10 +1,10 @@
 {
   "name": "@abhishek.nagaraja/catms",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publishConfig": {
     "access": "public"
   },
-  "description": "Coding Agents Team Management System — Linear + Obsidian + AGENTS.md workflow scaffolding for multi-agent AI coding teams",
+  "description": "Coding Agents Team Management System — Trackers + CAMS RAG workflow scaffolding for multi-agent AI coding teams",
   "bin": {
     "catms": "bin/catms.js"
   },
@@ -12,10 +12,7 @@
     "bin",
     "lib",
     "templates",
-    "obsidian-template",
-    "openspec-templates",
-    "linear-setup.md",
-    "linear-milestones.md"
+    "openspec-templates"
   ],
   "engines": {
     "node": ">=18"
@@ -30,8 +27,8 @@
     "agents.md",
     "claude-code",
     "cursor",
-    "linear",
-    "obsidian",
+    "cams",
+    "rag",
     "workflow"
   ]
 }

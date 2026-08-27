@@ -3,6 +3,27 @@
 All notable changes to CATMS are documented here.
 Format: `## [version] — YYYY-MM-DD`
 
+## [v0.5.0] — 2026-08-27
+
+### Added
+- Native markdown trackers (`tasks.md`, `sprint.md`, `decision.md`, `log.md`) at the project root.
+- Lightweight, file-based CAMS RAG server (`tools/cams/`) which runs as a self-contained MCP server (storing chunks in `memory.ndjson` and using pluggable OpenAI, Voyage, or local Ollama embeddings) — no Docker or database server required.
+- `.mcp.json` automatic registration on `catms init` and `catms update` (`lib/merge-json.js`).
+- Real branch discipline (`docs/BRANCHING.md`, single-stage `feat→main` or two-stage `feat→dev→main`, chosen at `catms init`): a CAMS-backed collision check before every branch, `depends_on`/`blocks_on` task fields for real cross-task dependencies, a `park/` branch prefix, and a no-autonomous-merge rule.
+- Sprint workflow (`docs/SPRINT-WORKFLOW.md`): cross-repo initiatives in `sprint.md`, a single-active-sprint WIP limit, and an agent-determined sprint-ordering algorithm.
+- Four Claude Code skills (`.claude/skills/`) that operationalize the two docs above: `task-kickoff`, `sprint-planning`, `pr-checks-loop`, `sprint-close`.
+- `scripts/branch-audit.sh` — report-only audit of branches ahead of the integration branch, across every repo in `.catms.json`'s `repos` field (auto-detected for multi-repo workspaces).
+
+### Removed
+- Obsidian project vault template (`obsidian-template/`) and path settings.
+- Linear task tracking setup docs and settings.
+- `templates/docs/GIT_WORKFLOW.md` (single-stage-only, no dependency tracking) — replaced by `docs/BRANCHING.md`.
+
+### Changed
+- `lib/init.js` and `lib/update.js` updated to prompt for embedding provider/keys and branch strategy, register CAMS in `.mcp.json`, write the branch/sprint docs and skills, and manage local trackers instead of Linear/Obsidian.
+- Workflow instructions (`AGENTS.md`, `CLAUDE.md`, `CURSOR.md` and `.cursor/rules/*.mdc`) updated to use local trackers, CAMS, and the new branch/sprint discipline.
+- `.catms.json` gained `branch_strategy`, `integration_branch`, and `repos` fields; projects updating from pre-v0.5.0 default to `single-stage`/`main`/`[]`.
+
 ---
 
 ## [v0.4.0] — 2026-07-04

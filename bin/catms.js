@@ -7,8 +7,8 @@ const { closeInterface } = require('../lib/prompt');
 const HELP = `catms — Coding Agents Team Management System
 
 Usage:
-  catms init      Scaffold CATMS (AGENTS.md, CLAUDE.md, CURSOR.md, Obsidian vault) into the current directory
-  catms update     Pull the latest CATMS templates into a project that already uses CATMS
+  catms init      Scaffold CATMS (AGENTS.md, CLAUDE.md, CURSOR.md, trackers, CAMS) into a project
+  catms update     Pull the latest CATMS templates and trackers into a project that already uses CATMS
   catms --version  Print the CATMS version
   catms --help     Show this help
 `;

@@ -1,6 +1,6 @@
 # Design — {CHANGE_NAME}
 
-**Linear issue:** {ISSUE_ID}
+**Task ID:** {TASK_ID}
 **Depends on:** specs.md approved
 
 ---
