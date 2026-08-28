@@ -3,6 +3,12 @@
 All notable changes to CATMS are documented here.
 Format: `## [version] — YYYY-MM-DD`
 
+## [Unreleased]
+
+### Added
+- `project-adoption` Claude Code skill — run once, right after `catms init` on a project with existing commit history, to seed `tasks.md`/`decision.md`/`log.md` with real context read from the actual git log, README, and stack, then backfill CAMS. `catms init` is a plain script with no model access, so trackers previously started empty regardless of whether a project was brand new or years old; this closes that gap without adding any LLM-calling logic to the CLI itself, since the agent running `catms init` already has reasoning available for free.
+- `catms init` detects existing commit history (>5 commits, per-repo for a multi-repo workspace) and points at the skill in its "Next steps" output.
+
 ## [v0.5.0] — 2026-08-27
 
 ### Added
