@@ -11,7 +11,7 @@ A drop-in workflow template for teams building with multiple AI coding agents (C
 - **OpenSpec** gives every feature a paper trail before any code is written
 - **`docs/BRANCHING.md`** ties every branch to a task ID, with a CAMS-backed collision check before you cut one and a `depends_on`/`blocks_on` mechanism for real cross-task dependencies — single-stage (`feat→main`) or two-stage (`feat→dev→main`), chosen at `catms init`
 - **`docs/SPRINT-WORKFLOW.md`** groups multi-task/multi-repo initiatives in `sprint.md`, with a single-active-sprint WIP limit
-- Six Claude Code skills (`task-kickoff`, `sprint-planning`, `pr-checks-loop`, `sprint-close`, `project-adoption`, `session-sync`) turn the docs above into runnable checklists — including a first-run pass that seeds the trackers from an existing codebase, and a proactive end-of-session sync so nothing gets forgotten under time pressure
+- Seven Claude Code skills (`task-kickoff`, `sprint-planning`, `pr-checks-loop`, `sprint-close`, `project-adoption`, `session-sync`, `architecture-diagram`) turn the docs above into runnable checklists — including a first-run pass that seeds the trackers from an existing codebase, a proactive end-of-session sync so nothing gets forgotten, and a grounded Mermaid architecture diagram saved into the repo
 
 ---
 
@@ -38,7 +38,8 @@ templates/            ← Copied into your project by `catms init`
   branching/          ← docs/BRANCHING.md — single-stage.md or two-stage.md, chosen at init
   docs/               ← SPRINT-WORKFLOW.md
   scripts/            ← branch-audit.sh — report-only, reads .catms.json's repos field
-  claude-skills/      ← task-kickoff, sprint-planning, pr-checks-loop, sprint-close, project-adoption, session-sync → .claude/skills/
+  claude-skills/      ← task-kickoff, sprint-planning, pr-checks-loop, sprint-close, project-adoption, session-sync,
+                        architecture-diagram → .claude/skills/
 
   trackers/           ← Tracker templates copied to project root
     tasks.md          ← Project backlog, component tasks, claim/handoff/branch/depends_on fields
@@ -133,6 +134,9 @@ Every decision/finding is stored semantically. Rerunning `cams_backfill` keeps m
 
 ### 8. Session sync, every time
 The "Every Session — End" checklist (update `tasks.md`, write the session log, prepend `log.md`, record any real decision, `cams_ingest` + `cams_backfill`) is the highest-frequency step in the whole workflow and the easiest one to skip under time pressure. The `session-sync` skill runs it proactively whenever a session wraps up, not only when explicitly asked.
+
+### 9. Architecture diagrams grounded in real code
+The `architecture-diagram` skill inspects the actual codebase (dependency manifests, `.env.example`, infra config, API routes, `.mcp.json`) before drawing anything, then produces a Mermaid diagram — component overview, a request/RAG-pipeline trace, or a schema view, whichever fits what was asked — saved to `docs/design/architecture.md`. Draws only what's evidenced; explicitly marks the boundary where untrusted content (user input, RAG-retrieved chunks, tool output) enters an agent's context, when there is one.
 
 ---
 
