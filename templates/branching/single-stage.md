@@ -34,6 +34,16 @@ git push -u origin feat/{id}-short-description
 
 Tie the branch name to the `tasks.md` task id. `park/` branches are for work deliberately set aside — time-box them, and revisit to either land or delete rather than letting them sit for months.
 
+## Branch granularity — when to bundle vs. split
+
+"One task = one branch" is in service of the collision-check machinery above, not a rule for its own sake — when there's genuinely no collision risk, forcing separate branches is overhead without a safety benefit. Use judgment:
+
+- **Bundle sequential subtasks of the same initiative into one branch/PR** when: same repo, same agent, done back-to-back in one session, no other agent's work interleaved in between, and no reason one piece needs to ship on a different timeline than the rest.
+- **Keep separate when there's a real reason** — a `P0`/standing-risk fix that should ship fast and alone, not bundled with lower-urgency follow-on work; or when a task might genuinely get picked up by a different agent/session later, which is the actual collision-avoidance case the branch-per-task default exists for.
+- **Trivial/zero-risk findings never get their own branch at all** — fold them into an already-open PR touching that repo, or just report the lines; recording them in `decision.md`/`cams_ingest` is enough on its own.
+- **Cross-repo work still gets one PR per repo** — mechanically unavoidable, GitHub PRs are repo-scoped, this isn't part of the bundling judgment.
+- **Default to continuing on the same open PR** rather than stacking a new branch on top of it, unless the base genuinely needs to merge and be reviewed independently first.
+
 ## Strict branch hygiene and tracking
 
 - Any `In Progress` task in `tasks.md` MUST include a `branch: <name>` tag.

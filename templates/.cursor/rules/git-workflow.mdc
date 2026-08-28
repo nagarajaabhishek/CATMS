@@ -10,7 +10,7 @@ Full policy: [docs/BRANCHING.md](../../docs/BRANCHING.md)
 ## Rules
 
 1. **Never commit directly to the integration branch (`{INTEGRATION_BRANCH}`)** — always branch first
-2. **One task = one branch** — name: `feat/{id}-description`
+2. **One task = one branch, as the default** — name: `feat/{id}-description`. Bundling sequential same-session subtasks of one initiative into a single branch/PR is a judgment call, not the baseline — see `docs/BRANCHING.md` → Branch granularity
 3. **Collision check first** — `cams_query` what's `In Progress` in this repo and what it touches before cutting the branch. Same file/surface, no declared order → add `depends_on` or ask which goes first, don't silently branch and hope
 4. **One concern per branch** — don't mix unrelated areas
 5. **Push the branch** after commits — `git push -u origin <branch>`

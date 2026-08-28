@@ -60,7 +60,11 @@ If this project uses sequentially-numbered migration files (Prisma, Rails, Djang
 - Grep open PRs for pending migration files (`gh pr list` + inspect diffs) to catch one that hasn't merged yet.
 - If a collision surfaces later at merge/rebase time, renumber — never force-merge two migrations sharing a number.
 
-### 6. Create the branch and tag it — do this even if the task looks like "just investigation"
+### 6. Decide whether this needs a new branch at all
+
+Per `docs/BRANCHING.md` → Branch granularity: if this task is a sequential subtask of the same initiative you (this agent, this session) just branched for — same repo, no other agent's work interleaved since, no independent-timeline reason to split — continue on that open branch/PR instead of stacking a new one. Otherwise, or if unsure, branch fresh; the default is still one task = one branch, bundling is the judgment call, not the baseline.
+
+If continuing on the existing branch, skip to step 7. Otherwise, create the branch and tag it — do this even if the task looks like "just investigation":
 
 ```bash
 git checkout -b feat/<task-slug>

@@ -3,6 +3,11 @@
 All notable changes to CATMS are documented here.
 Format: `## [version] — YYYY-MM-DD`
 
+## [Unreleased]
+
+### Added
+- `docs/BRANCHING.md` → **Branch granularity** section: "one task = one branch" is now an explicit default, not an absolute — sequential same-session subtasks of one initiative can bundle into a single branch/PR when there's no real collision risk, with clear exceptions (a `P0`/standing-risk fix stays solo, a task that might get picked up by a different agent later stays split, trivial/zero-risk findings never get a branch at all). `task-kickoff` checks this before branching (continue an open branch vs. cut a new one) instead of always cutting fresh. `.cursor/rules/git-workflow.mdc` updated to point at it.
+
 ## [v0.6.0] — 2026-08-28
 
 ### Added
