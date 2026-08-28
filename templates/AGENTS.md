@@ -84,8 +84,11 @@ Before pausing or finishing, update the task in place (move to `Done` or add not
 
 1. Write session log at `sessions/YYYY-MM-DD.md` (or `sessions/YYYY-MM-DD-cursor.md` for Cursor).
 2. Prepend a one-liner entry to `log.md`.
-3. If you made/found any durable decisions or facts, run `cams_ingest`.
-4. Run `cams_backfill` to sync all updated trackers into CAMS.
+3. Ensure `tasks.md` reflects the correct state for every task touched this session — don't leave a line looking further along than it is.
+4. If you made/found any durable decisions or facts, write the `decision.md` entry and run `cams_ingest`.
+5. Run `cams_backfill` to sync all updated trackers into CAMS.
+
+This is the single most-repeated step in the whole workflow and the easiest one to skip under time pressure — nothing else forces it. In Claude Code, run this proactively (not only when asked) whenever wrapping up via the `session-sync` skill, which is the checklist version of the five steps above.
 
 ---
 

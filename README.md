@@ -11,7 +11,7 @@ A drop-in workflow template for teams building with multiple AI coding agents (C
 - **OpenSpec** gives every feature a paper trail before any code is written
 - **`docs/BRANCHING.md`** ties every branch to a task ID, with a CAMS-backed collision check before you cut one and a `depends_on`/`blocks_on` mechanism for real cross-task dependencies — single-stage (`feat→main`) or two-stage (`feat→dev→main`), chosen at `catms init`
 - **`docs/SPRINT-WORKFLOW.md`** groups multi-task/multi-repo initiatives in `sprint.md`, with a single-active-sprint WIP limit
-- Five Claude Code skills (`task-kickoff`, `sprint-planning`, `pr-checks-loop`, `sprint-close`, `project-adoption`) turn the two docs above into runnable checklists — including a first-run pass that seeds the trackers from an existing codebase instead of starting blank
+- Six Claude Code skills (`task-kickoff`, `sprint-planning`, `pr-checks-loop`, `sprint-close`, `project-adoption`, `session-sync`) turn the docs above into runnable checklists — including a first-run pass that seeds the trackers from an existing codebase, and a proactive end-of-session sync so nothing gets forgotten under time pressure
 
 ---
 
@@ -38,7 +38,7 @@ templates/            ← Copied into your project by `catms init`
   branching/          ← docs/BRANCHING.md — single-stage.md or two-stage.md, chosen at init
   docs/               ← SPRINT-WORKFLOW.md
   scripts/            ← branch-audit.sh — report-only, reads .catms.json's repos field
-  claude-skills/      ← task-kickoff, sprint-planning, pr-checks-loop, sprint-close, project-adoption → .claude/skills/
+  claude-skills/      ← task-kickoff, sprint-planning, pr-checks-loop, sprint-close, project-adoption, session-sync → .claude/skills/
 
   trackers/           ← Tracker templates copied to project root
     tasks.md          ← Project backlog, component tasks, claim/handoff/branch/depends_on fields
@@ -130,6 +130,9 @@ Every decision/finding is stored semantically. Rerunning `cams_backfill` keeps m
 
 ### 7. Adopting an existing project
 `catms init`'s trackers start empty whether the project is brand new or has years of history — it's a plain script with no model access, so it can't summarize a codebase itself. If it detects real commit history at setup time, it points at the `project-adoption` skill: run once, it reads the actual git log/README/stack and writes a conservative first `decision.md` entry plus a real `tasks.md` backlog (only from things it actually finds, never invented), then backfills CAMS — so session one has real context instead of nothing.
+
+### 8. Session sync, every time
+The "Every Session — End" checklist (update `tasks.md`, write the session log, prepend `log.md`, record any real decision, `cams_ingest` + `cams_backfill`) is the highest-frequency step in the whole workflow and the easiest one to skip under time pressure. The `session-sync` skill runs it proactively whenever a session wraps up, not only when explicitly asked.
 
 ---
 

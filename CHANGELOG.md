@@ -8,6 +8,7 @@ Format: `## [version] — YYYY-MM-DD`
 ### Added
 - `project-adoption` Claude Code skill — run once, right after `catms init` on a project with existing commit history, to seed `tasks.md`/`decision.md`/`log.md` with real context read from the actual git log, README, and stack, then backfill CAMS. `catms init` is a plain script with no model access, so trackers previously started empty regardless of whether a project was brand new or years old; this closes that gap without adding any LLM-calling logic to the CLI itself, since the agent running `catms init` already has reasoning available for free.
 - `catms init` detects existing commit history (>5 commits, per-repo for a multi-repo workspace) and points at the skill in its "Next steps" output.
+- `session-sync` Claude Code skill — the checklist version of `AGENTS.md`'s "Every Session — End" section (update `tasks.md`, write the session log, prepend `log.md`, record any real decision, `cams_ingest` + `cams_backfill`), run proactively whenever a session wraps up rather than left as an unenforced manual step. This is the highest-frequency action in the whole workflow and the one most likely to get skipped under time pressure.
 
 ## [v0.5.0] — 2026-08-27
 
