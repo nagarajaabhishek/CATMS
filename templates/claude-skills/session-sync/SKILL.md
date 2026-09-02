@@ -46,6 +46,10 @@ If a settled call was made this session that another agent would otherwise re-li
 
 Run it last, after steps 2-6 have actually been written to disk — this is what makes everything above queryable by the next session's `cams_query` calls. Don't skip it even if step 6 felt like enough; `cams_backfill` is what picks up the `tasks.md`/`decision.md`/`log.md` edits themselves, not just anything explicitly ingested.
 
+### 8. If this is a multi-developer project — push now, don't wait
+
+**Only end-of-session batching is at risk here — if a second developer shares this repo, don't hold tracker/knowledge edits until this skill runs.** Commit and push `tasks.md`/`sprint.md`/`decision.md`/session-log changes as they happen during the session too (right after claiming a task, right after a real decision), not just now. This step is the final catch-all, not the only sync point — the goal is that the other developer's `post-merge` hook (see `team-onboarding`) picks up your changes within minutes of a push, not only after your session fully ends. If you haven't pushed at all this session, do it now before finishing.
+
 ## What this skill doesn't cover
 
 - Sprint-level wrap-up (merging branches, release PRs, archiving a finished sprint) → `sprint-close`.
