@@ -19,6 +19,12 @@ Always query CAMS (`cams_query`) before assuming something is unknown, stale, or
 
 ---
 
+## Team roster
+
+{TEAM_ROSTER}
+
+---
+
 ## Every Session — Start (Lazy Context Loading)
 
 **Load only what you need. Never read everything upfront.**
