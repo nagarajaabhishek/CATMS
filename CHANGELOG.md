@@ -3,6 +3,23 @@
 All notable changes to CATMS are documented here.
 Format: `## [version] — YYYY-MM-DD`
 
+## [v0.7.0] — 2026-09-01
+
+### Added
+- **Multi-developer support:** `catms team add` command to register new developers, generate per-developer claim tags (`@claude-<slug>` pattern), and update team roster in AGENTS.md/CLAUDE.md/CURSOR.md managed blocks. `.catms.json` now includes a `team` array with name, GitHub username, and claim tag for each developer.
+- **Team onboarding skill:** `.claude/skills/team-onboarding/` — comprehensive checklist for onboarding a new developer to a CATMS project, covering repository access, CAMS setup, git hooks, and first-task claiming.
+- **Git hook for CAMS sync:** `.git/hooks/post-merge` — automatically runs CAMS backfill after pulling new changes, keeping semantic memory in sync across developers without manual steps.
+- **Watch-sync script:** `tools/cams/watch-sync.sh` — optional background loop for near-real-time CAMS freshness (polls for changes every 5 minutes, can be customized).
+- **Branch Plan section in `sprint.md`:** New per-sprint table documenting branching strategy, dependencies, and merge targets — optional but recommended for multi-developer coordination.
+- **Cross-machine collision prevention guidance:** New subsection in both `docs/BRANCHING.md` templates (single-stage and two-stage) explaining how to avoid divergence when developers work on separate local clones — emphasizes `git fetch` + `git pull` before branching, post-merge hook for CAMS, and optional watch-sync for freshness.
+- **CAMS multi-developer documentation:** `tools/cams/CAMS-README.md` — explicitly states the local-first design choice (no hosted backend, freshness bounded by git pull cadence) and describes how the post-merge hook + optional watch-sync mitigate sync latency.
+- **Claim-tag convention in trackers:** `tasks.md` and `decision.md` templates now document the `@claude-<slug>` convention for multi-developer teams, so two developers running Claude Code produce distinguishable owner tags.
+
+### Changed
+- `lib/init.js` now copies git hooks and watch-sync.sh into `tools/cams/` during setup, initializes `.catms.json` with a `team` array starting with the setup user as `@you`, and includes `team-onboarding` in the skills list.
+- `lib/update.js` includes `team-onboarding` skill in the update pipeline.
+- `.catms.json.template` now includes an example `team` array field.
+
 ## [v0.6.0] — 2026-08-28
 
 ### Added
