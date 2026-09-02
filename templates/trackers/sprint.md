@@ -21,6 +21,17 @@ Ranked {SETUP_DATE}. Re-rank whenever a sprint is added or the active slot frees
 
 **Status as of {SETUP_DATE}:** Greenfield / partially built — grounded in what's actually been verified (code, `cams_query`), not assumed from an old label.
 
+## Branch Plan
+
+| Branch | Repo | Base | Depends on | Owner | Status |
+|--------|------|------|-----------|-------|--------|
+| `feat/{PREFIX}-1-short` | `{REPO_NAME}` | `{INTEGRATION_BRANCH}` | — | `—` | Not started |
+| `feat/{PREFIX}-2-short` | `{REPO_NAME}` | `feat/{PREFIX}-1-short` | `{PREFIX}-1` | `—` | Not started |
+
+(Populate during sprint planning. Base column: what branch this PR targets. Depends on: if this task has a `depends_on`, list the parent id.)
+
+## Tasks
+
 - [ ] **{PREFIX}-1** Task `P1` `—` `{SETUP_DATE}` `sprint: {slug}`
       One-line description.
 - [ ] **{PREFIX}-2** Task `P1` `—` `{SETUP_DATE}` `depends_on: {PREFIX}-1` `sprint: {slug}`

@@ -7,7 +7,7 @@
 > **Fields:**
 > - **id** — short stable reference, `{PREFIX}-{n}` (e.g. `APP-1`, `BE-2`), incrementing per repo/area. Never reuse a retired id.
 > - **priority** — `P0` (urgent/near-done, do next) → `P1` (normal) → `P2` (later/nice-to-have).
-> - **owner** — `—` for unclaimed, or `@claude` / `@cursor` / `@you` / a real name. Always check this is still `—` before claiming a Backlog item.
+> - **owner** — `—` for unclaimed, or `@claude` / `@cursor` / `@you` / a real name / agent claim tag. For multi-developer teams using Claude Code / Cursor / Antigravity, use the per-developer claim tags registered in `.catms.json`'s `team` array: `@claude-<slug>` (e.g. `@claude-an`, `@claude-jordan`) so two developers both running Claude Code produce distinguishable tags instead of both collapsing to `@claude`. Always check this is still `—` before claiming a Backlog item.
 > - **updated** — `YYYY-MM-DD`, bumped whenever the line's state/owner/description changes.
 > - **branch** — `branch: <name>`, required once a task is `In Progress`. See `docs/BRANCHING.md`.
 > - **depends_on** — optional, `depends_on: {parent-id}` — only when this task's branch genuinely can't be built without a *same-repo* sibling task's unmerged code. The child branch cuts from the parent's branch tip, and the child's PR can't merge before the parent's. See `docs/BRANCHING.md` → Branch origin & dependency rules.
