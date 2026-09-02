@@ -71,6 +71,14 @@ Written because concurrent work on different features can cause branches to over
 
 **Don't over-chain.** Most tasks are independent of each other — default to branching each from `main` with no dependency. Only add `depends_on` when a task genuinely can't exist without a sibling's code yet. Chaining every task in a sprint into one dependency line is just a slower version of "one branch per sprint," which this doc already rejects (see `docs/SPRINT-WORKFLOW.md` — one feature branch per task, not one per sprint).
 
+## Cross-machine collision prevention
+
+When multiple developers work on different local clones of the same repo (not a shared on-disk checkout), divergence happens fast — one developer's local state doesn't see another's unpushed branches or recent merges. Always pull before branching:
+
+- **Before branching or starting work:** `git fetch origin` + `git pull origin {INTEGRATION_BRANCH}`. This is non-optional for multi-developer teams, not just a nice-to-have. A stale local integration branch is a real collision vector: two developers can independently grab the same next migration number, branch from what they think is current, and race to PR.
+- **Before resuming work after a pause:** repeat the fetch + pull step, even if you didn't leave the terminal. A teammate may have merged and deployed in the intervening time, changing what "current" means.
+- **Check CAMS state before trusting local task.md state:** CAMS backfill runs automatically on `git pull` (via the `post-merge` hook), so after pulling, semantic memory reflects the new state. If memory is stale, pull again; if it stays stale, the hook may have failed — check the logs.
+
 ## Migration-number collisions
 
 If this project uses sequentially-numbered migration files (Prisma, Rails, Django, Supabase, etc.), two branches built in parallel can independently grab the same next number since neither can see the other's uncommitted file. Before adding a new migration:

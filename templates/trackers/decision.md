@@ -34,7 +34,7 @@ Group by topic. Update in place. Newest entries in a section go at the top.
 ### D-YYYYMMDD-short-slug
 **Status:** current
 **Decided:** YYYY-MM-DD
-**By:** @cursor | @claude | @you
+**By:** @cursor | @claude | @you | agent claim tag (e.g. @claude-an, @claude-jordan for multi-developer teams)
 **Decision:** one self-contained sentence.
 **Why:** one or two sentences. What was rejected, if anything.
 **Refs:** task id, PR, ADR, session log — optional.

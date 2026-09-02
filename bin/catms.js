@@ -7,10 +7,11 @@ const { closeInterface } = require('../lib/prompt');
 const HELP = `catms — Coding Agents Team Management System
 
 Usage:
-  catms init      Scaffold CATMS (AGENTS.md, CLAUDE.md, CURSOR.md, trackers, CAMS) into a project
-  catms update     Pull the latest CATMS templates and trackers into a project that already uses CATMS
-  catms --version  Print the CATMS version
-  catms --help     Show this help
+  catms init           Scaffold CATMS (AGENTS.md, CLAUDE.md, CURSOR.md, trackers, CAMS) into a project
+  catms update         Pull the latest CATMS templates and trackers into a project that already uses CATMS
+  catms team add       Add a new developer to the team roster
+  catms --version      Print the CATMS version
+  catms --help         Show this help
 `;
 
 async function main() {
@@ -23,6 +24,18 @@ async function main() {
     case 'update':
       await require('../lib/update').run();
       break;
+    case 'team': {
+      const subCmd = process.argv[3];
+      if (subCmd === 'add') {
+        await require('../lib/team').add();
+      } else {
+        console.log('catms team — Manage team roster\n');
+        console.log('Usage:');
+        console.log('  catms team add    Add a new developer to the team\n');
+        process.exitCode = 1;
+      }
+      break;
+    }
     case '--version':
     case '-v':
       console.log(version);

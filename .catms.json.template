@@ -7,5 +7,12 @@
   "integration_branch": "main",
   "repos": [],
   "catms_repo": "https://github.com/nagarajaabhishek/CATMS",
-  "setup_date": "{SETUP_DATE}"
+  "setup_date": "{SETUP_DATE}",
+  "team": [
+    {
+      "name": "You",
+      "github_user": "{GITHUB_USER}",
+      "claim_tag": "@you"
+    }
+  ]
 }
