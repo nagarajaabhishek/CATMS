@@ -7,6 +7,7 @@ Format: `## [version] — YYYY-MM-DD`
 
 ### Added
 - `docs/BRANCHING.md` → **Branch granularity** section: "one task = one branch" is now an explicit default, not an absolute — sequential same-session subtasks of one initiative can bundle into a single branch/PR when there's no real collision risk, with clear exceptions (a `P0`/standing-risk fix stays solo, a task that might get picked up by a different agent later stays split, trivial/zero-risk findings never get a branch at all). `task-kickoff` checks this before branching (continue an open branch vs. cut a new one) instead of always cutting fresh. `.cursor/rules/git-workflow.mdc` updated to point at it.
+- `architecture-diagram` skill → **Step 2b, parallel sub-agent sweep** for a large repo or multi-repo workspace: spawns one investigation sub-agent per repo/module (bounded, same checklist as the single-repo pass, plus a sibling-reference grep for cross-repo edges) instead of one sequential bounded read, then synthesizes a system-level diagram plus zoomed-in detail diagrams for any repo that turned out complex — flagging contradictions between sub-agent reports rather than silently picking one.
 
 ## [v0.7.0] — 2026-09-01
 
