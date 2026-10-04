@@ -1,3 +1,7 @@
 node_modules/
 .env
 memory.ndjson
+memory.meta.json
+*.tmp
+memory.lock
+backfill.log

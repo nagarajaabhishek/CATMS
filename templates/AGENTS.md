@@ -12,8 +12,8 @@ Multiple agents and humans share this codebase. **Chat is ephemeral** — the ne
 - **sprint.md** — tracks active, planned, and completed sprints.
 - **decision.md** — tracks settled architecture and product design decisions.
 - **log.md** & **sessions/** — reverse-chronological session logs and narrative histories.
-- **CAMS** — Coding Agent Memory System. A local, lightweight semantic memory layer running as an MCP server.
-  - Tools: `cams_query` (search memory), `cams_ingest` (save a fact), `cams_backfill` (sync tracker files to memory).
+- **CAMS** — Coding Agent Memory System. A local, lightweight memory layer running as an MCP server, with hybrid keyword + semantic search. Every result cites its file, line range, and commit.
+  - Tools: `cams_query` (search memory; optional `sources` filter such as `["tasks-md"]`), `cams_history` (how a decision, task, or file changed over time), `cams_ingest` (save a fact), `cams_backfill` (sync tracker files to memory).
 
 Always query CAMS (`cams_query`) before assuming something is unknown, stale, or still true. Run `cams_backfill` to sync memory after editing tracker files.
 
@@ -52,7 +52,7 @@ Always query CAMS (`cams_query`) before assuming something is unknown, stale, or
 
 Full rules: `docs/BRANCHING.md` (applied automatically by the `task-kickoff` skill in Claude Code). **Every feature or fix gets its own branch — never commit directly to the integration branch.**
 
-Every task branch starts with a **collision check** — `cams_query` what's currently `In Progress` in this repo and what it touches, before cutting the branch. See `docs/BRANCHING.md` → Branch origin & dependency rules for the full mechanism, including `depends_on`/`blocks_on` and the `park/` branch prefix for shelved work.
+Every task branch starts with a **collision check** — `cams_query` (with `sources: ["tasks-md"]`) what's currently `In Progress` in this repo and what it touches, before cutting the branch. See `docs/BRANCHING.md` → Branch origin & dependency rules for the full mechanism, including `depends_on`/`blocks_on` and the `park/` branch prefix for shelved work.
 
 **No agent merges into the integration branch/`main` or deletes a branch without asking first** — every merge is a proposed PR, every deletion happens only after a user-approved merge.
 
@@ -93,8 +93,9 @@ Before pausing or finishing, update the task in place (move to `Done` or add not
 3. Ensure `tasks.md` reflects the correct state for every task touched this session — don't leave a line looking further along than it is.
 4. If you made/found any durable decisions or facts, write the `decision.md` entry and run `cams_ingest`.
 5. Run `cams_backfill` to sync all updated trackers into CAMS.
+6. Commit and push the trackers, the session log, and any new `memory/facts/` files — `cams_ingest` writes facts there, and teammates (and your next machine) only get them once they're pushed.
 
-This is the single most-repeated step in the whole workflow and the easiest one to skip under time pressure — nothing else forces it. In Claude Code, run this proactively (not only when asked) whenever wrapping up via the `session-sync` skill, which is the checklist version of the five steps above.
+This is the single most-repeated step in the whole workflow and the easiest one to skip under time pressure — nothing else forces it. In Claude Code, run this proactively (not only when asked) whenever wrapping up via the `session-sync` skill, which is the checklist version of the six steps above.
 
 ---
 

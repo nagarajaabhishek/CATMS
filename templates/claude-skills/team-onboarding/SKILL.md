@@ -5,9 +5,9 @@ description: Onboard a new developer joining a CATMS project — verifying repo 
 
 # Team onboarding ({PROJECT_NAME})
 
-New developer joining {PROJECT_NAME}? Use this skill to verify access, set up local tooling, install git hooks, and confirm they're ready to start claiming tasks.
+New developer joining {PROJECT_NAME}? Use this skill to verify access, set up local tooling, install git hooks, and confirm they're ready to start claiming tasks. Repo access is the only access CAMS needs — the project's memory (trackers, `memory/facts/`, git history) comes with the clone.
 
-**Important:** Steps 1–4 are human-only actions — the new developer (or their manager) must execute these; no agent can do them. Step 5 onward is the local environment setup and first-task claiming that this skill can walk through.
+**Important:** Steps 1–4 are human-only actions — the new developer (or their manager) must execute these, including entering their own embedding key in `catms setup`; no agent can do them. Step 5 onward is the optional import, first-task claiming, and reading that this skill can walk through.
 
 ## Steps
 
@@ -61,34 +61,31 @@ Check `.catms.json`'s `cams_provider` field. If it's `ollama`:
   ollama serve
   ```
 
-If `cams_provider` is `openai` or `voyage`, skip this step — the API keys are configured in `tools/cams/.env`.
+If `cams_provider` is `openai` or `voyage`, skip this step — each developer enters their own API key during `catms setup` (step 4); it's stored only in their gitignored `tools/cams/.env`.
 
-### 4. Install CAMS dependencies and run backfill
+### 4. Run `catms setup` (critical — git hooks and local memory are NOT cloned)
 
-```bash
-cd tools/cams
-npm install
-npm run backfill
-```
-
-This seeds the local semantic memory with all project history (session logs, tasks.md, decision.md, docs/). First backfill takes 1–2 minutes; after that, it's a few seconds.
-
-### 5. Install the post-merge git hook (critical — NOT cloned automatically)
-
-Git hooks are NOT included when you clone a repository. The post-merge hook runs CAMS backfill automatically whenever pulling new changes, keeping two developers' local CAMS instances in sync via git pull cadence (typically a few minutes apart).
+From anywhere inside the cloned repo:
 
 ```bash
-cp tools/cams/hooks/post-merge .git/hooks/
-chmod +x .git/hooks/post-merge
+catms setup
 ```
 
-Verify:
+It asks for the developer's own embedding key (provider defaults to `.catms.json`'s `cams_provider`; leave the key blank for keyword-only search), then installs CAMS dependencies, installs the git hooks (post-merge, post-checkout, post-rewrite) that keep memory in sync on every pull, rebase, and branch switch, registers the CAMS MCP server, matches their GitHub username to the team roster, and builds memory from the repo — trackers, shared facts in `memory/facts/`, and history from `git log`.
+
+Verify: the last step prints `✓ Test query works`, and `ls .git/hooks/post-merge` exists.
+
+**If this isn't done:** the developer has the repo's files but no searchable memory, and pulls from teammates won't re-index.
+
+### 5. [Moving machines only] Import facts from an old CAMS install
+
+Only for a developer moving from a machine that ran CAMS 0.8 or earlier, where `cams_ingest` facts were stored only in that machine's `tools/cams/memory.ndjson`. Copy that file over, then:
+
 ```bash
-ls -la .git/hooks/post-merge
-# Should show: -rwxr-xr-x
+cd tools/cams && npm run import -- /path/to/old/memory.ndjson
 ```
 
-**If this isn't done:** pulling changes from teammates won't automatically re-index the project memory, and CAMS queries will be stale relative to the git state.
+Commit the files it writes to `memory/facts/` so the whole team gets them.
 
 ### 6. [Optional] Set up continuous pull for near-live freshness
 

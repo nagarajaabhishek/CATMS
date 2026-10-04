@@ -22,7 +22,7 @@ It is **current truth, edited in place**. When a call is reversed, update the en
 | `sprint.md` | initiative plans |
 | `docs/design/decisions/` (formal ADRs) | a full architecture write-up |
 | session logs | narrative of one session |
-| CAMS (`cams_query` / `cams_ingest`) | semantic recall over all of the above |
+| CAMS (`cams_query` / `cams_ingest`) | keyword + semantic recall over all of the above, with history (`cams_history`) |
 
 CAMS is the **search layer** — `cams_query` for recall; never `Read` this file (or `tasks.md` / `sprint.md`) whole once it grows past a page or two. This file is the **writeable working set** — open the entry you're editing, don't reload the whole thing. Formal architecture still gets an ADR; add a short pointer entry here so other agents don't reopen it by accident.
 

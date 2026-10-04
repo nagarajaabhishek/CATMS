@@ -49,7 +49,7 @@ git log --oneline -1 origin/{INTEGRATION_BRANCH}
 
 ### 4. Collision check — the actual anti-overlap step
 
-Before running `git checkout -b`, `cams_query` which tasks are `In Progress` in this project and what files they touch. Then `Read` only those task lines if you need the exact text:
+Before running `git checkout -b`, `cams_query` with `sources: ["tasks-md"]` which tasks are `In Progress` in this project and what files they touch — include the files or surfaces this task will touch in the question, since exact paths and identifiers match by keyword. Each result cites its line range in `tasks.md`; `Read` only those lines if you need the exact text:
 - **Different files** → proceed, branch independently, no dependency needed, merge order doesn't matter.
 - **Same file or surface, no declared order** → do not proceed with two independent branches racing to reconcile later. Either add a `depends_on` if there's a natural build order, or stop and ask the user which goes first. Silently branching anyway and hoping the merge resolves itself is exactly the failure mode this check exists to prevent.
 

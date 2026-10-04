@@ -24,7 +24,7 @@ This step runs even for a casual "what if we built X" — it's cheap and prevent
 
 ### 1. CAMS precondition
 
-Confirm the local memory store is usable before researching anything — run `cams_backfill` if it hasn't run yet this session (cheap, safe, dedupes on content hash).
+Confirm the local memory store is usable before researching anything — run `cams_backfill` if it hasn't run yet this session (cheap, safe, never re-embeds unchanged text).
 
 ### 2. Research the real status — don't write a plan from memory
 

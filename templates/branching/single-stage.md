@@ -63,7 +63,7 @@ Written because concurrent work on different features can cause branches to over
 - The child branch is cut from the **parent branch's tip**, not from `main`. The branch name itself doesn't need to encode the lineage — `depends_on` in `tasks.md` is the source of truth.
 - **Merge order follows the dependency, not convention alone:** the child's PR targets the parent branch until the parent merges into `main`. Only after the parent lands does the child rebase onto `main` and retarget its PR base. A child's PR must never merge into `main` while its declared parent is still unmerged.
 
-**Collision check before branching (the actual anti-overlap rule):** before cutting any new branch, `cams_query` which tasks are `In Progress` in this project and what they touch. Then `Read` only those specific task lines (not the whole tracker) if you need the exact text.
+**Collision check before branching (the actual anti-overlap rule):** before cutting any new branch, `cams_query` (with `sources: ["tasks-md"]`) which tasks are `In Progress` in this project and what they touch. Then `Read` only those specific task lines (not the whole tracker) if you need the exact text.
 - Different files → branch independently from `main`, no dependency needed, merge in either order.
 - Same file/surface, no declared order → don't let both branch independently and race to reconcile later. Either sequence them with `depends_on`, or stop and ask which goes first. Silently proceeding and hoping the merge resolves itself is exactly the failure mode this check exists to prevent.
 
@@ -77,7 +77,7 @@ When multiple developers work on different local clones of the same repo (not a 
 
 - **Before branching or starting work:** `git fetch origin` + `git pull origin {INTEGRATION_BRANCH}`. This is non-optional for multi-developer teams, not just a nice-to-have. A stale local integration branch is a real collision vector: two developers can independently grab the same next migration number, branch from what they think is current, and race to PR.
 - **Before resuming work after a pause:** repeat the fetch + pull step, even if you didn't leave the terminal. A teammate may have merged and deployed in the intervening time, changing what "current" means.
-- **Check CAMS state before trusting local task.md state:** CAMS backfill runs automatically on `git pull` (via the `post-merge` hook), so after pulling, semantic memory reflects the new state. If memory is stale, pull again; if it stays stale, the hook may have failed — check the logs.
+- **Check CAMS state before trusting local task.md state:** CAMS backfill runs automatically after `git pull`, rebases, and branch switches (git hooks installed by `catms setup`), so after pulling, semantic memory reflects the new state within seconds. If it stays stale, the hook may have failed — check `tools/cams/backfill.log`, or run `npm run backfill` in `tools/cams/`.
 
 ## Migration-number collisions
 

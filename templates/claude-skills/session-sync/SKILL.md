@@ -1,6 +1,6 @@
 ---
 name: session-sync
-description: Run the "Every Session — End" checklist from AGENTS.md before wrapping up — update tasks.md to reflect exactly what happened, write the session log, prepend log.md, record any real decision in decision.md, then cams_ingest and cams_backfill so the next session (possibly a different tool) inherits accurate state instead of guessing it. Use this whenever the user says something like "wrap up," "that's it for now," "let's stop here," "done for today," "end the session," or when a natural stopping point is reached and no further work is planned this session — proactively, not only when explicitly asked, since this is the single most-repeated step in the whole system and the easiest one to skip under time pressure.
+description: Run the "Every Session — End" checklist from AGENTS.md before wrapping up — update tasks.md to reflect exactly what happened, write the session log, prepend log.md, record any real decision in decision.md, then cams_ingest and cams_backfill, then commit and push (including memory/facts/) so the next session (possibly a different tool) inherits accurate state instead of guessing it. Use this whenever the user says something like "wrap up," "that's it for now," "let's stop here," "done for today," "end the session," or when a natural stopping point is reached and no further work is planned this session — proactively, not only when explicitly asked, since this is the single most-repeated step in the whole system and the easiest one to skip under time pressure.
 ---
 
 # Session sync ({PROJECT_NAME})
@@ -40,15 +40,17 @@ If a settled call was made this session that another agent would otherwise re-li
 
 ### 6. `cams_ingest` anything not already covered by the trackers themselves
 
-`tasks.md`/`sprint.md`/`decision.md`/`log.md`/the session log all get swept by the backfill in step 7 regardless — but a standalone fact or finding worth recalling on its own (not naturally anchored to one tracker line) should get an explicit `cams_ingest` call now, at the moment it's fresh, not deferred.
+`tasks.md`/`sprint.md`/`decision.md`/`log.md`/the session log all get swept by the backfill in step 7 regardless — but a standalone fact or finding worth recalling on its own (not naturally anchored to one tracker line) should get an explicit `cams_ingest` call now, at the moment it's fresh, not deferred. Each call writes a file under `memory/facts/` — it gets committed with everything else in step 8.
 
 ### 7. `cams_backfill`
 
 Run it last, after steps 2-6 have actually been written to disk — this is what makes everything above queryable by the next session's `cams_query` calls. Don't skip it even if step 6 felt like enough; `cams_backfill` is what picks up the `tasks.md`/`decision.md`/`log.md` edits themselves, not just anything explicitly ingested.
 
-### 8. If this is a multi-developer project — push now, don't wait
+### 8. Commit and push — including `memory/facts/`
 
-**Only end-of-session batching is at risk here — if a second developer shares this repo, don't hold tracker/knowledge edits until this skill runs.** Commit and push `tasks.md`/`sprint.md`/`decision.md`/session-log changes as they happen during the session too (right after claiming a task, right after a real decision), not just now. This step is the final catch-all, not the only sync point — the goal is that the other developer's `post-merge` hook (see `team-onboarding`) picks up your changes within minutes of a push, not only after your session fully ends. If you haven't pushed at all this session, do it now before finishing.
+Commit the trackers, the session log, and any new or edited `memory/facts/*.md` files, then push. Facts saved with `cams_ingest` exist only on this machine until they're pushed — not for teammates, and not for this developer on their next machine.
+
+**In a multi-developer project, don't hold tracker/knowledge edits until this skill runs.** Commit and push `tasks.md`/`sprint.md`/`decision.md`/`memory/facts/`/session-log changes as they happen during the session too (right after claiming a task, right after a real decision), not just now. This step is the final catch-all, not the only sync point — the goal is that the other developer's git hooks (installed by `catms setup`, see `team-onboarding`) re-index your changes within minutes of a push, not only after your session fully ends. If you haven't pushed at all this session, do it now before finishing.
 
 ## What this skill doesn't cover
 
