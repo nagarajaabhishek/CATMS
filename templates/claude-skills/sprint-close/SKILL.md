@@ -30,7 +30,7 @@ For each task branch, in the order from step 2:
 1. Merge the integration branch into the task branch locally first (not the other direction) and confirm it's still buildable/testable against current state.
 2. Push the branch.
 3. Open a PR into the integration branch — **one task branch per PR**, never a combined PR for multiple sprint tasks. This keeps review scoped and bisectable, and matches how the tasks were branched in the first place (see `task-kickoff`).
-4. **Run `pr-checks-loop` on it before treating it as ready.** A PR isn't done at "opened" — every required check needs to be genuinely green, root-caused and fixed rather than bypassed, before it counts as mergeable.
+4. **Run `pre-pr-review` before opening it, then `pr-checks-loop` on it before treating it as ready.** A PR isn't done at "opened" — every required check needs to be genuinely green, root-caused and fixed rather than bypassed, before it counts as mergeable.
 5. Report the PR to the user and wait for review/merge — don't proceed to the next dependent task's PR until a parent PR it depends on has actually merged.
 
 ### 4. Verify staging once every task branch is merged (two-stage projects)
