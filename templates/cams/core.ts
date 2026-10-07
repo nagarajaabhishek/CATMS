@@ -260,6 +260,34 @@ export function reciprocalRankFusion<T>(
 }
 
 // ---------------------------------------------------------------------------
+// Ranking options — tuned with `npm run eval`, see CHANGELOG v0.10.0
+// ---------------------------------------------------------------------------
+
+export type RankOptions = {
+  /** "hybrid" = BM25 + vector fused with RRF; "vector"/"keyword" use one ranking only (for the eval). */
+  mode?: "hybrid" | "vector" | "keyword";
+  /** Multiplicative bonus (0.1 = +10%) on the fused score of CURATED_SOURCES. 0 disables. */
+  curatedBoost?: number;
+};
+
+/** Hand-maintained, current-truth sources: a hit here beats a session-log aside of similar relevance. */
+export const CURATED_SOURCES = new Set(["decision-md", "decision", "manual", "task", "sprint-md", "tasks-md", "doc"]);
+
+/** Re-sorts fused results after multiplying the score of curated-source items by (1 + boost). */
+export function applyCuratedBoost<T extends { item: number; score: number }>(
+  fused: T[],
+  sourceOf: (item: number) => string,
+  boost: number | undefined,
+): T[] {
+  if (!boost) return fused;
+  return fused
+    .map((f) => (CURATED_SOURCES.has(sourceOf(f.item)) ? { ...f, score: f.score * (1 + boost) } : f))
+    .sort((a, b) => b.score - a.score);
+}
+
+export const DEFAULT_RANK: RankOptions = { mode: "hybrid", curatedBoost: 0.1 };
+
+// ---------------------------------------------------------------------------
 // Fact files — memory/facts/*.md, one committed file per cams_ingest call
 // ---------------------------------------------------------------------------
 

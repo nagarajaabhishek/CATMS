@@ -1,0 +1,8 @@
+{
+  "description": "CAMS recall eval cases. Copy to eval/cases.json and replace with questions about YOUR project, phrased the way an agent would ask them. `ids` = decision/task ids a good answer must contain (strict hit); `phrases` = distinctive text from the answer (lenient hit if no id matches). Optional `sources` restricts the search like cams_query's `sources`. Add a case for every real miss (cams_feedback 'missed', `npm run report`). Aim for 40+ cases, a few of them answered only by uncurated sources (session logs) so a source boost can't look better than it is.",
+  "cases": [
+    {"q": "Which sprint covers observability and alerting?", "ids": [], "phrases": ["Observability"]},
+    {"q": "Why did we choose this database?", "ids": ["D-20260101-database-choice"], "phrases": []},
+    {"q": "How did we fix the build error in the shared package?", "ids": [], "phrases": ["re-export shim"], "note": "answer lives in a session log, not a curated source"}
+  ]
+}

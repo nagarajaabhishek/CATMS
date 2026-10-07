@@ -38,9 +38,10 @@ import { z } from "zod";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFile, writeFile, readdir, stat, rename, open, unlink, utimes, mkdir } from "node:fs/promises";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { LOG_DIR, logFeedback, logQuery, newQueryId, type FeedbackOutcome } from "./querylog.js";
 import {
   Bm25Index,
   buildAliasGroups,
@@ -52,6 +53,9 @@ import {
   parseGitLog,
   reciprocalRankFusion,
   serializeFact,
+  applyCuratedBoost,
+  DEFAULT_RANK,
+  type RankOptions,
   splitDoc,
   splitSessionLog,
   tokenize,
@@ -846,6 +850,7 @@ type BackfillResult = {
 };
 
 async function backfillLocked(opts: { rebuild?: boolean } = {}): Promise<BackfillResult> {
+  const syncStart = new Date();
   const cacheMissing = !existsSync(MEMORY_FILE);
 
   // Facts from older versions lived only in memory.ndjson; give them files so they're shared.
@@ -899,6 +904,7 @@ async function backfillLocked(opts: { rebuild?: boolean } = {}): Promise<Backfil
 
   await persistMemory();
   await persistMeta(meta);
+  await markSynced(SOURCES.map((s) => s.source).concat(FACT_KINDS), syncStart);
   return {
     filesScanned: files.length,
     added: ctx.stats.added,
@@ -937,14 +943,14 @@ async function importFrom(file: string): Promise<{ written: string[]; result: Ba
 // Search
 // ---------------------------------------------------------------------------
 
-type Hit = { chunk: Chunk; kwRank: number | null; vecRank: number | null };
+type Hit = { chunk: Chunk; kwRank: number | null; vecRank: number | null; sim: number | null };
 type SearchResult = { hits: Hit[]; mode: "hybrid" | "keyword-only"; note: string | null };
 
 const FUSION_DEPTH = 50;
 
-async function search(
+export async function search(
   question: string,
-  opts: { k: number; sources?: string[]; includeSuperseded?: boolean; sourceRef?: string },
+  opts: { k: number; sources?: string[]; includeSuperseded?: boolean; sourceRef?: string; rank?: RankOptions },
 ): Promise<SearchResult> {
   await ensureFresh();
   const allowed = (i: number) => {
@@ -962,6 +968,8 @@ async function search(
     .map((r) => r.doc);
 
   let vecRanking: number[] = [];
+  const sims = new Map<number, number>();
+  let queryVector: number[] | null = null;
   let note: string | null = null;
   const vectorCandidates = memory
     .map((_, i) => i)
@@ -969,11 +977,13 @@ async function search(
   if (vectorCandidates.length > 0) {
     const q = await tryEmbed(question);
     if ("vector" in q) {
-      vecRanking = vectorCandidates
+      const scored = vectorCandidates
         .map((i) => ({ i, s: cosineSimilarity(q.vector, memory[i].embedding!) }))
         .sort((a, b) => b.s - a.s)
-        .slice(0, FUSION_DEPTH)
-        .map((r) => r.i);
+        .slice(0, FUSION_DEPTH);
+      queryVector = q.vector;
+      vecRanking = scored.map((r) => r.i);
+      for (const r of scored) sims.set(r.i, r.s);
     } else {
       note = `embedder unavailable: ${q.error}`;
     }
@@ -981,9 +991,18 @@ async function search(
     note = "no chunks embedded with the current model — run cams_backfill once an embedder is configured";
   }
 
-  const fused = reciprocalRankFusion([kwRanking, vecRanking]).slice(0, opts.k);
+  const rank = { ...DEFAULT_RANK, ...opts.rank };
+  const rankings = rank.mode === "vector" ? [[], vecRanking] : rank.mode === "keyword" ? [kwRanking, []] : [kwRanking, vecRanking];
+  const fused = applyCuratedBoost(reciprocalRankFusion(rankings), (i) => memory[i].source, rank.curatedBoost).slice(0, opts.k);
+  // A hit found only by keywords still gets a similarity (the query log and report rely on it).
+  if (queryVector) {
+    for (const f of fused) {
+      const c = memory[f.item];
+      if (!sims.has(f.item) && c.embedding && c.embedModel === EMBED_MODEL_ID) sims.set(f.item, cosineSimilarity(queryVector, c.embedding));
+    }
+  }
   return {
-    hits: fused.map((f) => ({ chunk: memory[f.item], kwRank: f.ranks[0], vecRank: f.ranks[1] })),
+    hits: fused.map((f) => ({ chunk: memory[f.item], kwRank: f.ranks[0], vecRank: f.ranks[1], sim: sims.get(f.item) ?? null })),
     mode: vecRanking.length > 0 ? "hybrid" : "keyword-only",
     note,
   };
@@ -1037,10 +1056,81 @@ function formatHits(r: SearchResult): string {
 }
 
 // ---------------------------------------------------------------------------
+// Freshness — when was each source last synced into the index?
+// ---------------------------------------------------------------------------
+
+const STATE_FILE = path.join(LOG_DIR, "backfill-state.json");
+let freshnessCache: { at: number; rows: SourceFreshness[] } | null = null;
+type SyncState = Record<string, string>; // source -> ISO time of the last sync that covered it
+
+function readState(): SyncState {
+  try { return JSON.parse(readFileSync(STATE_FILE, "utf-8")); } catch { return {}; }
+}
+async function markSynced(sources: Iterable<string>, at: Date): Promise<void> {
+  try {
+    await mkdir(LOG_DIR, { recursive: true });
+    const state = readState();
+    for (const s of sources) state[s] = at.toISOString();
+    await writeAtomic(STATE_FILE, JSON.stringify(state, null, 2) + "\n");
+    freshnessCache = null;
+  } catch (err) {
+    console.error("CAMS: could not save sync state:", err instanceof Error ? err.message : err);
+  }
+}
+
+type SourceFreshness = { source: string; files: number; chunks: number; newest: Date | null; lastSync: Date | null; stale: boolean };
+
+async function freshness(): Promise<SourceFreshness[]> {
+  // cams_query calls this on every query; the file walk is cheap but not free on big doc trees.
+  if (freshnessCache && Date.now() - freshnessCache.at < 10_000) return freshnessCache.rows;
+  await ensureFresh();
+  const state = readState();
+  const bySource = new Map<string, { files: number; newest: number }>();
+  for (const rel of await trackedFiles()) {
+    const src = sourceFor(rel);
+    if (!src) continue;
+    const row = bySource.get(src.source) ?? { files: 0, newest: 0 };
+    row.files += 1;
+    try { row.newest = Math.max(row.newest, statSync(path.join(PROJECT_DIR, rel)).mtimeMs); } catch { /* deleted mid-scan */ }
+    bySource.set(src.source, row);
+  }
+  const chunkCounts: Record<string, number> = {};
+  for (const c of memory) if (!c.supersededAt) chunkCounts[c.source] = (chunkCounts[c.source] ?? 0) + 1;
+  const rows = [...bySource].map(([source, r]) => {
+    const lastSync = state[source] ? new Date(state[source]) : null;
+    // 2s slack: sync start time vs. mtime of a file written moments before it.
+    const stale = !lastSync || r.newest > lastSync.getTime() + 2000;
+    return { source, files: r.files, chunks: chunkCounts[source] ?? 0, newest: r.newest ? new Date(r.newest) : null, lastSync, stale };
+  });
+  freshnessCache = { at: Date.now(), rows };
+  return rows;
+}
+
+/** One advisory line for cams_query output, or null when everything is in sync. */
+async function stalenessNote(hitSources: Set<string>): Promise<string | null> {
+  try {
+    const rows = await freshness();
+    const stale = rows.filter((r) => r.stale);
+    if (stale.length === 0) return null;
+    if (stale.every((r) => !r.lastSync)) return "⚠ No sync recorded yet, so freshness can't be checked — run cams_backfill once.";
+    const sorted = [...stale].sort((a, b) => Number(hitSources.has(b.source)) - Number(hitSources.has(a.source)));
+    const names = sorted.slice(0, 5).map((r) => (hitSources.has(r.source) ? `**${r.source}**` : r.source)).join(", ");
+    return `⚠ Index is older than ${stale.length} source(s): ${names}${stale.length > 5 ? `, +${stale.length - 5} more` : ""} — run cams_backfill; results may be stale.`;
+  } catch {
+    return null; // advisory only
+  }
+}
+
+// ---------------------------------------------------------------------------
 // MCP server
 // ---------------------------------------------------------------------------
 
-const server = new McpServer({ name: "{PROJECT_NAME}-cams", version: "3.0.0" });
+const server = new McpServer({ name: "{PROJECT_NAME}-cams", version: "3.1.0" });
+const SESSION = `${process.pid}-${Date.now().toString(36)}`;
+const clientName = () => {
+  const c = server.server.getClientVersion();
+  return c ? `${c.name}/${c.version}` : "unknown";
+};
 
 server.registerTool(
   "cams_query",
@@ -1052,7 +1142,8 @@ server.registerTool(
       question: z.string().describe("A plain-language question or identifier, e.g. 'is the staging DB migration done?' or 'proj-42'"),
       k: z.number().int().min(1).max(20).optional().describe("How many results to return (default 5)"),
       sources: z
-        .array(z.string())
+        .array(z.string().max(40))
+        .max(10)
         .optional()
         .describe(`Only search these sources. Known sources: ${ALL_SOURCES.join(", ")}`),
       includeSuperseded: z
@@ -1062,8 +1153,62 @@ server.registerTool(
     },
   },
   async ({ question, k, sources, includeSuperseded }) => {
-    const r = await search(question, { k: k ?? 5, sources, includeSuperseded });
-    return { content: [{ type: "text", text: formatHits(r) }] };
+    const kk = k ?? 5;
+    const r = await search(question, { k: kk, sources, includeSuperseded });
+    const queryId = newQueryId();
+    // Logged before any empty-result return: zero-hit queries are the ones the report most needs.
+    void logQuery({
+      id: queryId,
+      ts: new Date().toISOString(),
+      question,
+      k: kk,
+      filter: sources,
+      mode: `${r.mode}${DEFAULT_RANK.curatedBoost ? `+boost${DEFAULT_RANK.curatedBoost}` : ""}`,
+      client: clientName(),
+      session: SESSION,
+      top: r.hits.map((h) => ({ id: h.chunk.id, source: h.chunk.source, sim: h.sim === null ? null : +h.sim.toFixed(4), kw: h.kwRank, vec: h.vecRank })),
+    });
+    const stale = await stalenessNote(new Set(r.hits.map((h) => h.chunk.source)));
+    const footer =
+      r.hits.length > 0
+        ? `\n\n(query ${queryId} — when the task ends, call cams_feedback with this id)`
+        : `\n\n(query ${queryId} — call cams_feedback with outcome "missed" if you expected an answer)`;
+    return { content: [{ type: "text", text: (stale ? stale + "\n\n" : "") + formatHits(r) + footer }] };
+  },
+);
+
+server.registerTool(
+  "cams_feedback",
+  {
+    title: "Record whether CAMS recall helped (CAMS)",
+    description:
+      "Call once at task end for a cams_query you relied on (or should have found something with). outcome: changed_action = the result changed what you did; useful = relevant/confirmed; not_useful = results were off-topic; missed = the answer exists (or should) but CAMS didn't return it — say what in `missing`. Feeds the weekly recall report (npm run report).",
+    inputSchema: {
+      outcome: z.enum(["changed_action", "useful", "not_useful", "missed"]),
+      queryId: z.string().regex(/^q-[0-9a-f]{6}$/).optional().describe("The id printed under cams_query results (q-xxxxxx)"),
+      note: z.string().max(1000).optional().describe("One line on how it helped / what was off"),
+      missing: z.string().max(1000).optional().describe("For 'missed': what you were looking for / where the answer actually lives"),
+    },
+  },
+  async ({ outcome, queryId, note, missing }) => {
+    await logFeedback({ ts: new Date().toISOString(), queryId, outcome: outcome as FeedbackOutcome, note, missing, client: clientName(), session: SESSION });
+    return { content: [{ type: "text", text: `Recorded ${outcome}${queryId ? ` for ${queryId}` : ""}. Thanks.` }] };
+  },
+);
+
+server.registerTool(
+  "cams_status",
+  {
+    title: "Index freshness per source (CAMS)",
+    description: "Shows, per source, chunk count, when it was last synced, the newest file mtime on disk, and whether the index is stale for it. Use when results look out of date.",
+    inputSchema: {},
+  },
+  async () => {
+    const fmt = (d: Date | null) => (d ? d.toISOString().replace("T", " ").slice(0, 19) + "Z" : "never");
+    const rows = (await freshness()).map(
+      (f) => `${f.stale ? "STALE" : "ok   "}  ${f.source.padEnd(14)} chunks=${String(f.chunks).padStart(5)} files=${String(f.files).padStart(3)}  lastSync=${fmt(f.lastSync)}  newestFile=${fmt(f.newest)}`,
+    );
+    return { content: [{ type: "text", text: `${memory.filter((c) => !c.supersededAt).length} current chunks in index\n${rows.join("\n") || "No tracked files."}` }] };
   },
 );
 
@@ -1164,6 +1309,7 @@ server.registerTool(
       };
       await syncFile(rel, await readFile(path.join(PROJECT_DIR, rel), "utf-8"), ctx);
       await persistMemory();
+      await markSynced(["fact", source], new Date());
       return { rel, inserted: true, embedError: stats.error };
     });
     let text: string;
@@ -1248,7 +1394,19 @@ async function main() {
   await server.connect(transport);
 }
 
-main().catch((err) => {
-  console.error("CAMS fatal error:", err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+// Importable by eval/run.ts without starting the server. Compare real paths: node leaves
+// process.argv[1] un-resolved while import.meta.url is the resolved file, so a project reached
+// through a symlink would otherwise never start.
+function isEntryPoint(): boolean {
+  try {
+    return !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+if (isEntryPoint()) {
+  main().catch((err) => {
+    console.error("CAMS fatal error:", err instanceof Error ? err.message : err);
+    process.exit(1);
+  });
+}

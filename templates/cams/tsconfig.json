@@ -6,7 +6,12 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["server.ts", "core.ts"]
+  "include": [
+    "*.ts",
+    "eval/*.ts"
+  ]
 }

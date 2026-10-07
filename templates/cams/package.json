@@ -2,7 +2,7 @@
   "name": "{PROJECT_NAME}-cams",
   "version": "3.0.0",
   "private": true,
-  "description": "CAMS (Coding Agent Memory System) — local, git-backed shared memory MCP server for {PROJECT_NAME} (Claude Code + Cursor + Antigravity).",
+  "description": "CAMS (Coding Agent Memory System) \u2014 local, git-backed shared memory MCP server for {PROJECT_NAME} (Claude Code + Cursor + Antigravity).",
   "type": "module",
   "main": "server.ts",
   "scripts": {
@@ -10,7 +10,9 @@
     "backfill": "tsx server.ts --backfill",
     "rebuild": "tsx server.ts --backfill --rebuild",
     "import": "tsx server.ts --import",
-    "query": "tsx server.ts --query"
+    "query": "tsx server.ts --query",
+    "eval": "tsx eval/run.ts",
+    "report": "tsx report.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

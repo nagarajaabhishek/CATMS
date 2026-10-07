@@ -91,7 +91,7 @@ Before pausing or finishing, update the task in place (move to `Done` or add not
 1. Write session log at `sessions/YYYY-MM-DD.md` (or `sessions/YYYY-MM-DD-cursor.md` for Cursor).
 2. Prepend a one-liner entry to `log.md`.
 3. Ensure `tasks.md` reflects the correct state for every task touched this session — don't leave a line looking further along than it is.
-4. If you made/found any durable decisions or facts, write the `decision.md` entry and run `cams_ingest`.
+4. If you made/found any durable decisions or facts, write the `decision.md` entry and run `cams_ingest`. If you relied on `cams_query`, call `cams_feedback` once per query that mattered (`changed_action` / `useful` / `not_useful` / `missed`, plus what was missing) — it feeds the weekly recall report (`npm run report` in `tools/cams`).
 5. Run `cams_backfill` to sync all updated trackers into CAMS.
 6. Commit and push the trackers, the session log, and any new `memory/facts/` files — `cams_ingest` writes facts there, and teammates (and your next machine) only get them once they're pushed.
 
