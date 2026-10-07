@@ -14,8 +14,9 @@ Full policy: [docs/BRANCHING.md](../../docs/BRANCHING.md)
 3. **Collision check first** — `cams_query` (with `sources: ["tasks-md"]`) what's `In Progress` in this repo and what it touches before cutting the branch. Same file/surface, no declared order → add `depends_on` or ask which goes first, don't silently branch and hope
 4. **One concern per branch** — don't mix unrelated areas
 5. **Push the branch** after commits — `git push -u origin <branch>`
-6. **Merge via GitHub PR** — squash merge preferred
-7. **No agent merges or deletes branches autonomously** — always propose via PR or ask first
+6. **Review before every PR** — run the pre-PR review in `.claude/skills/pre-pr-review/SKILL.md` (exhaustive review + `docs/PR-REVIEW-CHECKLIST.md`, one fix round on the same PR) and put a **Review** section in the PR body before `gh pr create`
+7. **Merge via GitHub PR** — squash merge preferred
+8. **No agent merges or deletes branches autonomously** — always propose via PR or ask first
 8. **No force-push to `{INTEGRATION_BRANCH}`/`main`** without explicit human instruction
 9. **Never commit** `.env`, secrets, or machine-local IDE state
 

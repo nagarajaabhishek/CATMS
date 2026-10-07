@@ -3,6 +3,13 @@
 All notable changes to CATMS are documented here.
 Format: `## [version] — YYYY-MM-DD`
 
+## [v0.11.0] — 2026-10-07
+
+### Added
+- **`pre-pr-review` skill + mandatory rule:** no PR is opened until an exhaustive review-and-fix loop has run. It uses the `code-review` skill when the tool has it (or a manual multi-angle review), at `medium` for docs-only PRs, `high` for ordinary code and `max` for risky areas and release PRs; then runs the project checklist; fixes every confirmed or plausible finding at its root cause in one round on the same PR; re-reviews only when a fix touched risky code; caps at 2 rounds; and records a **Review** section in the PR body. Passing CI (`pr-checks-loop`) does not replace it. Derived from the Logos fork, where a release PR that passed every automated check still held two real bugs.
+- **`docs/PR-REVIEW-CHECKLIST.md`:** project-owned checklist (created once by `catms init`/`catms update`, never overwritten): the max-level triggers for your stack, 12 generic checks (client guard vs. server enforcement, ownership on privileged queries, state-field consistency, cost/abuse, destructive order, fail-open side effects, environment gates, removed behavior, fabricated data, input validation, clutter, secrets) and a project-specific section that grows whenever a review or incident finds a class of bug it missed.
+- `AGENTS.md` gets a **Pre-PR review** section; `sprint-close` runs the review before opening each PR; `catms init`/`update` install the skill.
+
 ## [v0.10.0] — 2026-10-07
 
 CAMS becomes measured. Ported from the Logos Tax Systems fork of CAMS (logos-platform-coordination#55), where these were built and reviewed first; the fork's own ranking experiments were re-run here on CATMS's hybrid search.

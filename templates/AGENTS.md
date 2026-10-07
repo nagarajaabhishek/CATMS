@@ -58,6 +58,12 @@ Every task branch starts with a **collision check** — `cams_query` (with `sour
 
 ---
 
+## Pre-PR review — mandatory before every PR
+
+**No PR is opened — feature, docs, hotfix, or release — until the `pre-pr-review` skill has run** (`.claude/skills/pre-pr-review/`). It runs an exhaustive code review (`medium` docs-only, `high` normal code, `max` for the triggers listed in `docs/PR-REVIEW-CHECKLIST.md` and every release PR), then that checklist, then fixes every confirmed or plausible finding at its root cause in **one round on the same PR** (never a new PR per finding), re-reviewing only when a fix touched risky code; cap 2 rounds, then escalate. The PR body carries a **Review** section (level, rounds, findings fixed/skipped). CI green (`pr-checks-loop`) is a separate, later gate — passing CI does not mean the review can be skipped. Add an item to `docs/PR-REVIEW-CHECKLIST.md` whenever a review or incident finds a class of bug it missed.
+
+---
+
 ## Sprint Workflow
 
 Full rules: `docs/SPRINT-WORKFLOW.md`. A sprint is a cross-repo/cross-cutting initiative tracked in `sprint.md`, separate from `tasks.md`'s per-repo state-of-record. **Only one sprint may be `Active` at a time** — see `docs/SPRINT-WORKFLOW.md` → Single active sprint for the WIP limit, exemptions, and enforcement.
