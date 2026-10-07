@@ -3,6 +3,21 @@
 All notable changes to CATMS are documented here.
 Format: `## [version] — YYYY-MM-DD`
 
+## [v0.10.0] — 2026-10-07
+
+CAMS becomes measured. Ported from the Logos Tax Systems fork of CAMS (logos-platform-coordination#55), where these were built and reviewed first; the fork's own ranking experiments were re-run here on CATMS's hybrid search.
+
+### Added
+- **Recall eval:** `npm run eval` (`tools/cams/eval/run.ts`) scores ranking configs (`vector`, `keyword`, `hybrid`, `hybrid+boost`, `production`; `--sweep hybrid:0.1`) on `eval/cases.json` — recall@1/3/5/10, MRR, strict (id) and lenient (phrase) hits. Start from `eval/cases.example.json`; run it before any chunking, embedding or ranking change.
+- **Query log + feedback:** `cams_query` logs scrubbed questions and top-hit ids/similarities to `tools/cams/logs/query-log.ndjson` (gitignored) and prints a query id; new `cams_feedback` tool records `changed_action`/`useful`/`not_useful`/`missed`. `scrub.ts` redacts key/token/password/URL-credential patterns first (`detectSecret` still refuses them in facts).
+- **Weekly report:** `npm run report [-- --days N] [-- --write]` — volume, hit rate and feedback coverage, agent-reported misses, repeated low-similarity questions (candidate missing entries), source mix.
+- **Freshness:** `cams_query` warns when a tracked file is newer than its last sync; new `cams_status` tool lists per-source chunks, last sync and newest file.
+- **Curated-source boost:** fused score of decisions, tasks, sprints, docs and saved facts is multiplied by 1.1 (`DEFAULT_RANK` in `core.ts`). Measured on 60 questions over the Logos corpus (same index, only ranking changed): top-1 42 → 49, top-3 54 → 54, MRR 0.792 → 0.854, strict top-1 33 → 40 of 50. Sweep: 5% gives 48/0.845, 25% gives 50/0.862 but loses a top-3 hit on questions answered by session logs; 10% chosen. For reference on the same cases: vector-only 36/48/MRR 0.709, keyword-only 33/45/0.677 — hybrid fusion is the largest single gain.
+- `search()` is exported from `server.ts` (the server only starts when run directly) so the eval can import it.
+
+### Evaluated, not adopted
+- Repeating the section heading on continuation chunks of long sections: neutral to slightly negative once the boost is on (MRR 0.854 → 0.843 on the 60 cases), so left out. It helped the Logos fork's cosine-only search (+0.016 MRR).
+
 ## [v0.9.0] — 2026-10-04
 
 ### Added

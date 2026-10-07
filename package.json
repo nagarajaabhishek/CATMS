@@ -1,10 +1,10 @@
 {
   "name": "@abhishek.nagaraja/catms",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "publishConfig": {
     "access": "public"
   },
-  "description": "Coding Agents Team Management System — Trackers + CAMS RAG workflow scaffolding for multi-agent AI coding teams",
+  "description": "Coding Agents Team Management System \u2014 Trackers + CAMS RAG workflow scaffolding for multi-agent AI coding teams",
   "bin": {
     "catms": "bin/catms.js"
   },

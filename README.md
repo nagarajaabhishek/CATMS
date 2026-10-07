@@ -49,7 +49,7 @@ templates/            ← Copied into your project by `catms init`
     sessions/         ← Session logs folder containing YYYY-MM-DD.md files
     
   cams/               ← Lightweight hybrid-search memory server
-    server.ts         ← MCP server with cams_query, cams_history, cams_ingest, cams_backfill
+    server.ts         ← MCP server with cams_query, cams_history, cams_ingest, cams_feedback, cams_status, cams_backfill
     core.ts           ← Tokenizer, BM25, rank fusion, splitters, fact files, git history walk (pure, tested in test/cams/)
     CAMS-README.md    ← How CAMS works: search, citations, history, sharing, moving machines
     hooks/            ← backfill-hook.sh → .git/hooks/post-merge, post-checkout, post-rewrite

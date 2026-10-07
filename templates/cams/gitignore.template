@@ -5,3 +5,4 @@ memory.meta.json
 *.tmp
 memory.lock
 backfill.log
+logs/

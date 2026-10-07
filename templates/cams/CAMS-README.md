@@ -74,6 +74,9 @@ The file is re-read whenever it changes; no restart or backfill needed.
 
 - `server.ts` — MCP server entry point (TypeScript, runs via `tsx`).
 - `core.ts` — pure logic used by `server.ts` (tokenizer, BM25, rank fusion, line-aware splitters, fact files, git history walk).
+- `scrub.ts`, `querylog.ts`, `report.ts` — query/feedback log, secret scrubber, weekly report (see **Measuring recall**).
+- `eval/run.ts`, `eval/cases.json` — recall eval (`npm run eval`); start from `eval/cases.example.json`.
+- `logs/` — query log and sync state (gitignored).
 - `package.json` — dependencies (`@modelcontextprotocol/sdk`, `zod`).
 - `tsconfig.json` — TypeScript config (strict mode).
 - `.env` — your embedding provider and key (gitignored).
@@ -94,6 +97,16 @@ Run `catms setup` from anywhere in the repo — it does everything below. By han
 2. Copy `.env.example` to `.env` and set `EMBED_PROVIDER` plus its key (`openai`, `voyage`, or `ollama`).
 3. `npm run backfill`
 4. The server is wired via `.mcp.json` in the project root; Claude Code, Cursor, and Antigravity start it on demand. Test with `npm run query -- "what changed recently"`.
+
+## Measuring recall
+
+Run **`npm run eval`** before changing chunking, the embedding model or ranking, and again after; put both tables in the PR. `eval/cases.json` holds questions phrased the way agents ask them, each with the decision/task id or phrase a good answer must contain (copy `eval/cases.example.json` to start; aim for 40+ cases, a few answered only by uncurated session logs). Add a case for every real miss. `--sweep hybrid:0.05,hybrid:0.1,vector:0.1` compares ad-hoc configs; the shipped ranking is `DEFAULT_RANK` in `core.ts`.
+
+- `cams_query` appends one line per call to `logs/query-log.ndjson` (gitignored): scrubbed question, k, source filter, top hit ids with cosine similarity and keyword/vector ranks, client, session. Chunk text is never logged; key/token/password/URL-credential patterns are redacted first. Each result ends with a query id.
+- `cams_feedback` (`changed_action` | `useful` | `not_useful` | `missed`, optional `queryId`, `note`, `missing`) — agents call it once at task end.
+- `cams_status` shows, per source, chunks, last sync, newest file mtime and a stale flag; `cams_query` prints a warning when a source file is newer than its last sync (uncommitted edits, or hooks that did not run).
+- `npm run report` (`-- --days 30`, `-- --write` saves to `docs/cams-reports/`) summarises volume, feedback hit rate and coverage, agent-reported misses, repeated low-similarity questions (candidate missing entries) and the top-1 source mix. Run it weekly.
+- Ranking: hybrid BM25 + vector with a 10% score boost for curated sources (`CURATED_SOURCES`: decisions, tasks, sprints, docs, saved facts) so a decision beats a session-log aside of similar relevance.
 
 ## Maintenance
 
