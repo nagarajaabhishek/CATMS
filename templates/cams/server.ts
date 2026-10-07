@@ -54,7 +54,10 @@ import {
   reciprocalRankFusion,
   serializeFact,
   applyCuratedBoost,
+  CURATED_SOURCES,
   DEFAULT_RANK,
+  parseCamsConfig,
+  type SourceDef,
   type RankOptions,
   splitDoc,
   splitSessionLog,
@@ -86,7 +89,18 @@ function loadDotEnv(filePath: string): void {
 }
 loadDotEnv(path.join(__dirname, ".env"));
 
-const EMBED_PROVIDER = (process.env.EMBED_PROVIDER ?? "openai") as
+// Provider precedence: EMBED_PROVIDER (env or tools/cams/.env) > .catms.json "cams_provider" (what
+// `catms init` records for the project) > openai. Without the middle step a machine whose .env
+// predates EMBED_PROVIDER would silently fall back to openai with no key and lose vector search.
+function projectProvider(): string | undefined {
+  try {
+    const p = (JSON.parse(readFileSync(path.join(__dirname, "..", "..", ".catms.json"), "utf-8")) as { cams_provider?: unknown }).cams_provider;
+    return p === "openai" || p === "voyage" || p === "ollama" ? p : undefined;
+  } catch {
+    return undefined;
+  }
+}
+const EMBED_PROVIDER = (process.env.EMBED_PROVIDER ?? projectProvider() ?? "openai") as
   | "openai"
   | "voyage"
   | "ollama";
@@ -133,7 +147,7 @@ const CATMS_CONFIG = path.join(PROJECT_DIR, ".catms.json");
  * chunk each, whose source is the fact's `kind`.
  */
 type Splitter = "bullet" | "heading" | "fact";
-const SOURCES: Array<{ kind: "dir" | "file"; path: string; source: string; splitter: Splitter }> = [
+const DEFAULT_SOURCES: SourceDef[] = [
   { kind: "dir", path: SESSIONS_DIR, source: "session-log", splitter: "bullet" },
   { kind: "file", path: path.join(PROJECT_DIR, "log.md"), source: "log-md", splitter: "bullet" },
   { kind: "file", path: path.join(PROJECT_DIR, "tasks.md"), source: "tasks-md", splitter: "heading" },
@@ -142,8 +156,22 @@ const SOURCES: Array<{ kind: "dir" | "file"; path: string; source: string; split
   { kind: "dir", path: path.join(PROJECT_DIR, "docs"), source: "doc", splitter: "heading" },
   { kind: "dir", path: path.join(PROJECT_DIR, "docs", "design", "changes"), source: "design-change", splitter: "heading" },
   { kind: "dir", path: path.join(PROJECT_DIR, "docs", "design", "archive"), source: "design-archive", splitter: "heading" },
+];
+
+/**
+ * A project whose files do not follow the default layout (sessions/ and docs/ at the
+ * root) lists its own sources in .catms.json → cams.sources, which replaces the
+ * defaults above; shared facts are always indexed. `cams.curatedSources` replaces the
+ * set of source names that get the ranking boost. Both are read once at startup
+ * (restart the server after editing them); an invalid entry stops the server with a
+ * message instead of silently leaving part of the project un-indexed.
+ */
+const CAMS_CONFIG = parseCamsConfig(existsSync(CATMS_CONFIG) ? readFileSync(CATMS_CONFIG, "utf-8") : null, PROJECT_DIR);
+const SOURCES: SourceDef[] = [
+  ...(CAMS_CONFIG.sources ?? DEFAULT_SOURCES),
   { kind: "dir", path: FACTS_DIR, source: "fact", splitter: "fact" },
 ];
+const CURATED = CAMS_CONFIG.curatedSources ? new Set(CAMS_CONFIG.curatedSources) : CURATED_SOURCES;
 const TRACKER_SOURCES = new Set(SOURCES.filter((s) => s.splitter !== "fact").map((s) => s.source));
 const FACT_KINDS = ["manual", "decision", "task"] as const;
 const ALL_SOURCES = [...TRACKER_SOURCES, ...FACT_KINDS];
@@ -993,7 +1021,7 @@ export async function search(
 
   const rank = { ...DEFAULT_RANK, ...opts.rank };
   const rankings = rank.mode === "vector" ? [[], vecRanking] : rank.mode === "keyword" ? [kwRanking, []] : [kwRanking, vecRanking];
-  const fused = applyCuratedBoost(reciprocalRankFusion(rankings), (i) => memory[i].source, rank.curatedBoost).slice(0, opts.k);
+  const fused = applyCuratedBoost(reciprocalRankFusion(rankings), (i) => memory[i].source, rank.curatedBoost, CURATED).slice(0, opts.k);
   // A hit found only by keywords still gets a similarity (the query log and report rely on it).
   if (queryVector) {
     for (const f of fused) {

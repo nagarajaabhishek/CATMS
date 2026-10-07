@@ -89,6 +89,24 @@ The file is re-read whenever it changes; no restart or backfill needed.
 - `watch-sync.sh` — optional continuous-pull background loop (opt-in).
 - `../../memory/facts/` — shared facts (committed).
 
+## Custom layout
+
+If your notes are not in `sessions/`, `log.md`, `docs/` at the project root, list your own sources in `.catms.json` (this replaces the defaults; `memory/facts/` is always indexed):
+
+```json
+{
+  "cams": {
+    "sources": [
+      { "kind": "dir",  "path": "projects/acme/sessions", "source": "session-log", "splitter": "bullet" },
+      { "kind": "file", "path": "tasks.md",               "source": "tasks-md",    "splitter": "heading" }
+    ],
+    "curatedSources": ["tasks-md", "decision-md"]
+  }
+}
+```
+
+`splitter` is `bullet` (one chunk per bullet/heading — logs) or `heading` (one chunk per section — prose). When directories nest, a file belongs to the most specific source. `curatedSources` are the source names that get the ranking boost (default: `decision-md`, `tasks-md`, `sprint-md`, `doc`, saved facts). Restart the server after editing; a bad entry stops it with a message naming the entry. Use `catms update --cams` to refresh just `tools/cams/` in a project that keeps its own AGENTS.md and skills.
+
 ## Setup
 
 Run `catms setup` from anywhere in the repo — it does everything below. By hand:

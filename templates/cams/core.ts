@@ -1,3 +1,5 @@
+import path from "node:path";
+
 /**
  * CAMS core — pure functions with no I/O, so they can be tested without
  * starting the MCP server: markdown splitters that keep line ranges, a
@@ -71,12 +73,30 @@ function capSpan(span: Span, max: number): Span[] {
   return out;
 }
 
-/** Enforces `max` chars per chunk and drops chunks too short to be useful. */
-export function enforceChunkSizeCap(spans: Span[], max: number): Span[] {
-  return spans.flatMap((s) => capSpan(s, max)).filter((s) => s.text.length > MIN_CHUNK_CHARS);
+/**
+ * Splits an oversized heading section and repeats the heading line on every
+ * continuation piece. Without it, the later pieces of a long entry lose the
+ * id/title the entry is about, so a question phrased around the id can only
+ * match the first piece. A pathologically long heading line is not repeated
+ * (it would eat the size budget).
+ */
+function capSection(span: Span, max: number): Span[] {
+  if (span.text.length <= max) return [span];
+  const first = span.text.split("\n", 1)[0];
+  if (!/^#{1,6} /.test(first) || first.length > max / 4) return capSpan(span, max);
+  const pieces = capSpan(span, max - first.length - 1);
+  return pieces.map((p, i) => (i === 0 ? p : { ...p, text: `${first}\n${p.text}` }));
 }
 
-function splitOn(fileContent: string, isBoundary: (line: string) => boolean, max: number): Span[] {
+/**
+ * Enforces `max` chars per chunk and drops chunks too short to be useful.
+ * `repeatHeading` (heading-split docs) repeats the heading on continuation pieces.
+ */
+export function enforceChunkSizeCap(spans: Span[], max: number, repeatHeading = false): Span[] {
+  return spans.flatMap((s) => (repeatHeading ? capSection(s, max) : capSpan(s, max))).filter((s) => s.text.length > MIN_CHUNK_CHARS);
+}
+
+function splitOn(fileContent: string, isBoundary: (line: string) => boolean, max: number, repeatHeading = false): Span[] {
   const lines = fileContent.split("\n");
   const raw: Span[] = [];
   let start = -1;
@@ -93,7 +113,7 @@ function splitOn(fileContent: string, isBoundary: (line: string) => boolean, max
     const span = makeSpan(lines, start, lines.length - 1, 1);
     if (span) raw.push(span);
   }
-  return enforceChunkSizeCap(raw, max);
+  return enforceChunkSizeCap(raw, max, repeatHeading);
 }
 
 /** One chunk per bullet (any indent level) or heading. */
@@ -103,7 +123,7 @@ export function splitSessionLog(fileContent: string, max: number): Span[] {
 
 /** One chunk per heading section. */
 export function splitDoc(fileContent: string, max: number): Span[] {
-  return splitOn(fileContent, (l) => /^#{1,6} /.test(l), max);
+  return splitOn(fileContent, (l) => /^#{1,6} /.test(l), max, true);
 }
 
 // ---------------------------------------------------------------------------
@@ -278,11 +298,77 @@ export function applyCuratedBoost<T extends { item: number; score: number }>(
   fused: T[],
   sourceOf: (item: number) => string,
   boost: number | undefined,
+  curated: ReadonlySet<string> = CURATED_SOURCES,
 ): T[] {
   if (!boost) return fused;
   return fused
-    .map((f) => (CURATED_SOURCES.has(sourceOf(f.item)) ? { ...f, score: f.score * (1 + boost) } : f))
+    .map((f) => (curated.has(sourceOf(f.item)) ? { ...f, score: f.score * (1 + boost) } : f))
     .sort((a, b) => b.score - a.score);
+}
+
+// ---------------------------------------------------------------------------
+// Source configuration — .catms.json → cams.sources / cams.curatedSources
+// ---------------------------------------------------------------------------
+
+export type SourceDef = { kind: "dir" | "file"; path: string; source: string; splitter: "bullet" | "heading" | "fact" };
+
+/** Names the fact files own; a configured source may not reuse them. */
+const RESERVED_SOURCES = new Set(["manual", "decision", "task", "fact"]);
+
+/**
+ * Validates `cams.sources` from .catms.json and resolves each path against the
+ * project directory. Throws with a message naming the bad entry — a silently
+ * ignored source would mean part of the project's memory is never indexed.
+ * Each entry: { kind: "dir"|"file", path: "<project-relative>", source: "<name>", splitter: "bullet"|"heading" }.
+ */
+export function parseSourceConfig(raw: unknown, projectDir: string): SourceDef[] {
+  if (!Array.isArray(raw)) throw new Error('.catms.json cams.sources must be an array');
+  const seen = new Set<string>();
+  return raw.map((e, i) => {
+    const where = `.catms.json cams.sources[${i}]`;
+    if (!e || typeof e !== "object") throw new Error(`${where} must be an object`);
+    const { kind, path: rel, source, splitter } = e as Record<string, unknown>;
+    if (kind !== "dir" && kind !== "file") throw new Error(`${where}.kind must be "dir" or "file"`);
+    if (typeof rel !== "string" || !rel || rel.startsWith("/") || rel.split(/[\\/]/).includes("..")) {
+      throw new Error(`${where}.path must be a project-relative path without ".."`);
+    }
+    if (typeof source !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(source) || RESERVED_SOURCES.has(source)) {
+      throw new Error(`${where}.source must be a lowercase name (letters, digits, dashes) other than ${[...RESERVED_SOURCES].join("/")}`);
+    }
+    if (splitter !== "bullet" && splitter !== "heading") throw new Error(`${where}.splitter must be "bullet" or "heading"`);
+    const abs = path.join(projectDir, ...rel.split("/"));
+    if (seen.has(abs)) throw new Error(`${where}.path duplicates an earlier source`);
+    seen.add(abs);
+    return { kind, path: abs, source, splitter };
+  });
+}
+
+export type CamsConfig = { sources?: SourceDef[]; curatedSources?: string[] };
+
+/**
+ * Reads the `cams` block of .catms.json. `text` is the file's content, or null if the file does
+ * not exist (then defaults apply). A file that exists but cannot be parsed, or has an invalid
+ * `cams.sources` / `cams.curatedSources`, throws: falling back to the default layout would make
+ * the next backfill drop every chunk of the configured sources.
+ */
+export function parseCamsConfig(text: string | null, projectDir: string): CamsConfig {
+  if (text === null) return {};
+  let json: { cams?: { sources?: unknown; curatedSources?: unknown } };
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    throw new Error(`.catms.json is not valid JSON (${err instanceof Error ? err.message : err}) — fix it before starting CAMS`);
+  }
+  const cams = json?.cams ?? {};
+  const out: CamsConfig = {};
+  if (cams.sources !== undefined) out.sources = parseSourceConfig(cams.sources, projectDir);
+  if (cams.curatedSources !== undefined) {
+    if (!Array.isArray(cams.curatedSources) || cams.curatedSources.some((s) => typeof s !== "string")) {
+      throw new Error(".catms.json cams.curatedSources must be an array of source names");
+    }
+    out.curatedSources = cams.curatedSources as string[];
+  }
+  return out;
 }
 
 export const DEFAULT_RANK: RankOptions = { mode: "hybrid", curatedBoost: 0.1 };
