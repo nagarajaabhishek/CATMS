@@ -89,7 +89,18 @@ function loadDotEnv(filePath: string): void {
 }
 loadDotEnv(path.join(__dirname, ".env"));
 
-const EMBED_PROVIDER = (process.env.EMBED_PROVIDER ?? "openai") as
+// Provider precedence: EMBED_PROVIDER (env or tools/cams/.env) > .catms.json "cams_provider" (what
+// `catms init` records for the project) > openai. Without the middle step a machine whose .env
+// predates EMBED_PROVIDER would silently fall back to openai with no key and lose vector search.
+function projectProvider(): string | undefined {
+  try {
+    const p = (JSON.parse(readFileSync(path.join(__dirname, "..", "..", ".catms.json"), "utf-8")) as { cams_provider?: unknown }).cams_provider;
+    return p === "openai" || p === "voyage" || p === "ollama" ? p : undefined;
+  } catch {
+    return undefined;
+  }
+}
+const EMBED_PROVIDER = (process.env.EMBED_PROVIDER ?? projectProvider() ?? "openai") as
   | "openai"
   | "voyage"
   | "ollama";

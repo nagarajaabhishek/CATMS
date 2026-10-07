@@ -23,3 +23,16 @@ test("installHooks never writes through a symlinked hook", () => {
   assert.match(readFileSync(tracked, "utf8"), /echo old/); // tracked file untouched
   assert.ok(existsSync(path.join(dir, ".git", "hooks", "post-checkout"))); // the others are still installed
 });
+
+import { spawnSync } from "node:child_process";
+
+test("a camsOnly project refuses a plain `catms update` and touches nothing", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "cams-only-"));
+  writeFileSync(path.join(dir, ".catms.json"), JSON.stringify({ version: "v0.1.0", project: "p", camsOnly: true }));
+  writeFileSync(path.join(dir, "AGENTS.md"), "mine\n");
+  const bin = path.join(import.meta.dirname ?? __dirname, "..", "..", "bin", "catms.js");
+  const r = spawnSync("node", [bin, "update"], { cwd: dir, encoding: "utf8", input: "y\n" });
+  assert.match(r.stdout, /camsOnly/);
+  assert.notEqual(r.status, 0);
+  assert.equal(readFileSync(path.join(dir, "AGENTS.md"), "utf8"), "mine\n");
+});
