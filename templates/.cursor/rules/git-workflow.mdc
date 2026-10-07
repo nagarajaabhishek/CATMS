@@ -17,8 +17,8 @@ Full policy: [docs/BRANCHING.md](../../docs/BRANCHING.md)
 6. **Review before every PR** — run the pre-PR review in `.claude/skills/pre-pr-review/SKILL.md` (exhaustive review + `docs/PR-REVIEW-CHECKLIST.md`, one fix round on the same PR) and put a **Review** section in the PR body before `gh pr create`
 7. **Merge via GitHub PR** — squash merge preferred
 8. **No agent merges or deletes branches autonomously** — always propose via PR or ask first
-8. **No force-push to `{INTEGRATION_BRANCH}`/`main`** without explicit human instruction
-9. **Never commit** `.env`, secrets, or machine-local IDE state
+9. **No force-push to `{INTEGRATION_BRANCH}`/`main`** without explicit human instruction
+10. **Never commit** `.env`, secrets, or machine-local IDE state
 
 ## Branch naming
 
