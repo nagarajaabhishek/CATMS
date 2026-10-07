@@ -343,6 +343,34 @@ export function parseSourceConfig(raw: unknown, projectDir: string): SourceDef[]
   });
 }
 
+export type CamsConfig = { sources?: SourceDef[]; curatedSources?: string[] };
+
+/**
+ * Reads the `cams` block of .catms.json. `text` is the file's content, or null if the file does
+ * not exist (then defaults apply). A file that exists but cannot be parsed, or has an invalid
+ * `cams.sources` / `cams.curatedSources`, throws: falling back to the default layout would make
+ * the next backfill drop every chunk of the configured sources.
+ */
+export function parseCamsConfig(text: string | null, projectDir: string): CamsConfig {
+  if (text === null) return {};
+  let json: { cams?: { sources?: unknown; curatedSources?: unknown } };
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    throw new Error(`.catms.json is not valid JSON (${err instanceof Error ? err.message : err}) — fix it before starting CAMS`);
+  }
+  const cams = json?.cams ?? {};
+  const out: CamsConfig = {};
+  if (cams.sources !== undefined) out.sources = parseSourceConfig(cams.sources, projectDir);
+  if (cams.curatedSources !== undefined) {
+    if (!Array.isArray(cams.curatedSources) || cams.curatedSources.some((s) => typeof s !== "string")) {
+      throw new Error(".catms.json cams.curatedSources must be an array of source names");
+    }
+    out.curatedSources = cams.curatedSources as string[];
+  }
+  return out;
+}
+
 export const DEFAULT_RANK: RankOptions = { mode: "hybrid", curatedBoost: 0.1 };
 
 // ---------------------------------------------------------------------------

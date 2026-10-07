@@ -65,3 +65,16 @@ test("a pathologically long heading line terminates and is not repeated", () => 
   assert.ok(spans.length >= 2);
   for (const s of spans) assert.ok(s.text.length <= 1800);
 });
+
+import { parseCamsConfig } from "../../templates/cams/core.ts";
+
+test("parseCamsConfig: absent file means defaults; broken or invalid config throws instead of falling back", () => {
+  assert.deepEqual(parseCamsConfig(null, root), {});
+  assert.deepEqual(parseCamsConfig("{}", root), {});
+  assert.throws(() => parseCamsConfig('{ "cams": { "sources": [], }', root), /not valid JSON/);
+  assert.throws(() => parseCamsConfig('{ "cams": { "curatedSources": "decision-md" } }', root), /curatedSources/);
+  assert.throws(() => parseCamsConfig('{ "cams": { "curatedSources": [1] } }', root), /curatedSources/);
+  const ok = parseCamsConfig('{ "cams": { "sources": [{"kind":"file","path":"tasks.md","source":"tasks-md","splitter":"heading"}], "curatedSources": ["tasks-md"] } }', root);
+  assert.equal(ok.sources?.length, 1);
+  assert.deepEqual(ok.curatedSources, ["tasks-md"]);
+});

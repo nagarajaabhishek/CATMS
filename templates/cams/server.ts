@@ -56,7 +56,7 @@ import {
   applyCuratedBoost,
   CURATED_SOURCES,
   DEFAULT_RANK,
-  parseSourceConfig,
+  parseCamsConfig,
   type SourceDef,
   type RankOptions,
   splitDoc,
@@ -155,21 +155,12 @@ const DEFAULT_SOURCES: SourceDef[] = [
  * (restart the server after editing them); an invalid entry stops the server with a
  * message instead of silently leaving part of the project un-indexed.
  */
-function readCamsConfig(): { sources?: unknown; curatedSources?: unknown } {
-  try {
-    return (JSON.parse(readFileSync(CATMS_CONFIG, "utf-8")) as { cams?: { sources?: unknown; curatedSources?: unknown } }).cams ?? {};
-  } catch {
-    return {};
-  }
-}
-const CAMS_CONFIG = readCamsConfig();
+const CAMS_CONFIG = parseCamsConfig(existsSync(CATMS_CONFIG) ? readFileSync(CATMS_CONFIG, "utf-8") : null, PROJECT_DIR);
 const SOURCES: SourceDef[] = [
-  ...(CAMS_CONFIG.sources !== undefined ? parseSourceConfig(CAMS_CONFIG.sources, PROJECT_DIR) : DEFAULT_SOURCES),
+  ...(CAMS_CONFIG.sources ?? DEFAULT_SOURCES),
   { kind: "dir", path: FACTS_DIR, source: "fact", splitter: "fact" },
 ];
-const CURATED = Array.isArray(CAMS_CONFIG.curatedSources)
-  ? new Set(CAMS_CONFIG.curatedSources.filter((s): s is string => typeof s === "string"))
-  : CURATED_SOURCES;
+const CURATED = CAMS_CONFIG.curatedSources ? new Set(CAMS_CONFIG.curatedSources) : CURATED_SOURCES;
 const TRACKER_SOURCES = new Set(SOURCES.filter((s) => s.splitter !== "fact").map((s) => s.source));
 const FACT_KINDS = ["manual", "decision", "task"] as const;
 const ALL_SOURCES = [...TRACKER_SOURCES, ...FACT_KINDS];
