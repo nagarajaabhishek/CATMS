@@ -969,6 +969,7 @@ export async function search(
 
   let vecRanking: number[] = [];
   const sims = new Map<number, number>();
+  let queryVector: number[] | null = null;
   let note: string | null = null;
   const vectorCandidates = memory
     .map((_, i) => i)
@@ -980,6 +981,7 @@ export async function search(
         .map((i) => ({ i, s: cosineSimilarity(q.vector, memory[i].embedding!) }))
         .sort((a, b) => b.s - a.s)
         .slice(0, FUSION_DEPTH);
+      queryVector = q.vector;
       vecRanking = scored.map((r) => r.i);
       for (const r of scored) sims.set(r.i, r.s);
     } else {
@@ -992,6 +994,13 @@ export async function search(
   const rank = { ...DEFAULT_RANK, ...opts.rank };
   const rankings = rank.mode === "vector" ? [[], vecRanking] : rank.mode === "keyword" ? [kwRanking, []] : [kwRanking, vecRanking];
   const fused = applyCuratedBoost(reciprocalRankFusion(rankings), (i) => memory[i].source, rank.curatedBoost).slice(0, opts.k);
+  // A hit found only by keywords still gets a similarity (the query log and report rely on it).
+  if (queryVector) {
+    for (const f of fused) {
+      const c = memory[f.item];
+      if (!sims.has(f.item) && c.embedding && c.embedModel === EMBED_MODEL_ID) sims.set(f.item, cosineSimilarity(queryVector, c.embedding));
+    }
+  }
   return {
     hits: fused.map((f) => ({ chunk: memory[f.item], kwRank: f.ranks[0], vecRank: f.ranks[1], sim: sims.get(f.item) ?? null })),
     mode: vecRanking.length > 0 ? "hybrid" : "keyword-only",
@@ -1051,6 +1060,7 @@ function formatHits(r: SearchResult): string {
 // ---------------------------------------------------------------------------
 
 const STATE_FILE = path.join(LOG_DIR, "backfill-state.json");
+let freshnessCache: { at: number; rows: SourceFreshness[] } | null = null;
 type SyncState = Record<string, string>; // source -> ISO time of the last sync that covered it
 
 function readState(): SyncState {
@@ -1062,6 +1072,7 @@ async function markSynced(sources: Iterable<string>, at: Date): Promise<void> {
     const state = readState();
     for (const s of sources) state[s] = at.toISOString();
     await writeAtomic(STATE_FILE, JSON.stringify(state, null, 2) + "\n");
+    freshnessCache = null;
   } catch (err) {
     console.error("CAMS: could not save sync state:", err instanceof Error ? err.message : err);
   }
@@ -1070,6 +1081,8 @@ async function markSynced(sources: Iterable<string>, at: Date): Promise<void> {
 type SourceFreshness = { source: string; files: number; chunks: number; newest: Date | null; lastSync: Date | null; stale: boolean };
 
 async function freshness(): Promise<SourceFreshness[]> {
+  // cams_query calls this on every query; the file walk is cheap but not free on big doc trees.
+  if (freshnessCache && Date.now() - freshnessCache.at < 10_000) return freshnessCache.rows;
   await ensureFresh();
   const state = readState();
   const bySource = new Map<string, { files: number; newest: number }>();
@@ -1083,12 +1096,14 @@ async function freshness(): Promise<SourceFreshness[]> {
   }
   const chunkCounts: Record<string, number> = {};
   for (const c of memory) if (!c.supersededAt) chunkCounts[c.source] = (chunkCounts[c.source] ?? 0) + 1;
-  return [...bySource].map(([source, r]) => {
+  const rows = [...bySource].map(([source, r]) => {
     const lastSync = state[source] ? new Date(state[source]) : null;
     // 2s slack: sync start time vs. mtime of a file written moments before it.
     const stale = !lastSync || r.newest > lastSync.getTime() + 2000;
     return { source, files: r.files, chunks: chunkCounts[source] ?? 0, newest: r.newest ? new Date(r.newest) : null, lastSync, stale };
   });
+  freshnessCache = { at: Date.now(), rows };
+  return rows;
 }
 
 /** One advisory line for cams_query output, or null when everything is in sync. */

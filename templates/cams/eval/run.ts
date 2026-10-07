@@ -51,6 +51,9 @@ for (const name of names) {
   const strict: (number | null)[] = [];
   for (const c of cases) {
     const r = await search(c.q, { k: 10, sources: c.sources, rank });
+    if (r.mode === "keyword-only" && rank.mode !== "keyword") {
+      throw new Error(`Embedder unavailable (${r.note ?? "no vectors"}) — the ${name} config would silently score keyword-only. Start Ollama / fix .env and run npm run backfill, then re-run.`);
+    }
     const texts = r.hits.map((h) => h.chunk.content);
     const first = (p: (t: string) => boolean) => { const i = texts.findIndex(p); return i < 0 ? null : i + 1; };
     const l = first((t) => hitLenient(t, c));

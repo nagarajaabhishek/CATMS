@@ -105,7 +105,7 @@ Run **`npm run eval`** before changing chunking, the embedding model or ranking,
 - `cams_query` appends one line per call to `logs/query-log.ndjson` (gitignored): scrubbed question, k, source filter, top hit ids with cosine similarity and keyword/vector ranks, client, session. Chunk text is never logged; key/token/password/URL-credential patterns are redacted first. Each result ends with a query id.
 - `cams_feedback` (`changed_action` | `useful` | `not_useful` | `missed`, optional `queryId`, `note`, `missing`) — agents call it once at task end.
 - `cams_status` shows, per source, chunks, last sync, newest file mtime and a stale flag; `cams_query` prints a warning when a source file is newer than its last sync (uncommitted edits, or hooks that did not run).
-- `npm run report` (`-- --days 30`, `-- --write` saves to `docs/cams-reports/`) summarises volume, feedback hit rate and coverage, agent-reported misses, repeated low-similarity questions (candidate missing entries) and the top-1 source mix. Run it weekly.
+- `npm run report` (`-- --days 30`, `-- --write` saves to `memory/cams-reports/` (not an indexed source, so reports never turn into search hits)) summarises volume, feedback hit rate and coverage, agent-reported misses, repeated low-similarity questions (candidate missing entries) and the top-1 source mix. Run it weekly.
 - Ranking: hybrid BM25 + vector with a 10% score boost for curated sources (`CURATED_SOURCES`: decisions, tasks, sprints, docs, saved facts) so a decision beats a session-log aside of similar relevance.
 
 ## Maintenance

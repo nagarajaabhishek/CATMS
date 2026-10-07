@@ -2,7 +2,7 @@
  * Weekly CAMS usage report from the query log.
  *   npm run report                 last 7 days to stdout
  *   npm run report -- --days 30
- *   npm run report -- --write      also save to docs/cams-reports/weekly-<date>.md (commit it)
+ *   npm run report -- --write      also save to memory/cams-reports/weekly-<date>.md (commit it)
  * Read "Candidate missing entries": repeated low-similarity questions usually mean
  * the answer was never written down — add a decision.md entry (or an eval case plus a
  * retrieval fix if the entry exists but isn't being found).
@@ -87,7 +87,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToP
   const text = buildReport(await readLog(), { days, low });
   console.log(text);
   if (args.includes("--write")) {
-    const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "docs", "cams-reports");
+    const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "memory", "cams-reports");
     mkdirSync(dir, { recursive: true });
     const file = path.join(dir, `weekly-${new Date().toISOString().slice(0, 10)}.md`);
     writeFileSync(file, text);
