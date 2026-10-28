@@ -116,3 +116,6 @@ Settings → Branches → Branch protection rules for `dev` and `main`:
 - Require pull request before merging
 - Require status checks to pass
 - Restrict direct pushes
+
+## Merge method and merge conflicts
+**Never squash-merge** (it loses history and can silently drop other sessions' work). Merge with a merge commit: `gh pr merge <n> --merge`. A PR that shows `CONFLICTING`/`DIRTY`/`BEHIND` is never merged through: coordinate with the session that owns the other side (or start a dedicated conflict session), resolve by merging the base into the feature branch, prove nothing was dropped (diff against the base), re-run checks, then merge. In Claude Code the `merge-conflict-resolution` skill carries the full steps.

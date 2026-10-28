@@ -11,7 +11,7 @@ A drop-in workflow template for teams building with multiple AI coding agents (C
 - **OpenSpec** gives every feature a paper trail before any code is written
 - **`docs/BRANCHING.md`** ties every branch to a task ID, with a CAMS-backed collision check before you cut one and a `depends_on`/`blocks_on` mechanism for real cross-task dependencies — single-stage (`feat→main`) or two-stage (`feat→dev→main`), chosen at `catms init`
 - **`docs/SPRINT-WORKFLOW.md`** groups multi-task/multi-repo initiatives in `sprint.md`, with a single-active-sprint WIP limit
-- Eight Claude Code skills (`task-kickoff`, `sprint-planning`, `pre-pr-review`, `pr-checks-loop`, `sprint-close`, `project-adoption`, `session-sync`, `architecture-diagram`) turn the docs above into runnable checklists — including a first-run pass that seeds the trackers from an existing codebase, a proactive end-of-session sync so nothing gets forgotten, and a grounded Mermaid architecture diagram saved into the repo
+- Nine Claude Code skills (`merge-conflict-resolution`, `task-kickoff`, `sprint-planning`, `pre-pr-review`, `pr-checks-loop`, `sprint-close`, `project-adoption`, `session-sync`, `architecture-diagram`) turn the docs above into runnable checklists — including a first-run pass that seeds the trackers from an existing codebase, a proactive end-of-session sync so nothing gets forgotten, and a grounded Mermaid architecture diagram saved into the repo
 
 ---
 

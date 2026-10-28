@@ -15,7 +15,7 @@ Full policy: [docs/BRANCHING.md](../../docs/BRANCHING.md)
 4. **One concern per branch** — don't mix unrelated areas
 5. **Push the branch** after commits — `git push -u origin <branch>`
 6. **Review before every PR** — run the pre-PR review in `.claude/skills/pre-pr-review/SKILL.md` (exhaustive review + `docs/PR-REVIEW-CHECKLIST.md`, one fix round on the same PR) and put a **Review** section in the PR body before `gh pr create`
-7. **Merge via GitHub PR** — squash merge preferred
+7. **Merge via GitHub PR** — merge commit only, **never squash**; resolve any merge conflict first (coordinate with the other side's session), then merge
 8. **No agent merges or deletes branches autonomously** — always propose via PR or ask first
 9. **No force-push to `{INTEGRATION_BRANCH}`/`main`** without explicit human instruction
 10. **Never commit** `.env`, secrets, or machine-local IDE state

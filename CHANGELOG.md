@@ -3,6 +3,11 @@
 All notable changes to CATMS are documented here.
 Format: `## [version] — YYYY-MM-DD`
 
+## [Unreleased]
+
+### Added
+- **`merge-conflict-resolution` skill + no-squash rule:** merge commits only (`gh pr merge --merge`), never squash. A PR with a merge conflict is resolved first (coordinate with the other side's session, or a dedicated conflict session; merge the base into the branch; prove nothing was dropped), then merged. Added to `templates/AGENTS.md`, the Cursor rule, and the single-stage branching doc (previously said squash).
+
 ## [v0.12.0] — 2026-10-07
 
 ### Added
