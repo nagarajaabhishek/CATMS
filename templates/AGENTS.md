@@ -54,6 +54,8 @@ Full rules: `docs/BRANCHING.md` (applied automatically by the `task-kickoff` ski
 
 Every task branch starts with a **collision check** — `cams_query` (with `sources: ["tasks-md"]`) what's currently `In Progress` in this repo and what it touches, before cutting the branch. See `docs/BRANCHING.md` → Branch origin & dependency rules for the full mechanism, including `depends_on`/`blocks_on` and the `park/` branch prefix for shelved work.
 
+**Never squash-merge — merge commits only (`gh pr merge --merge`).** A PR with a merge conflict is never merged through: resolve it first, coordinating with the session that owns the other side (or a dedicated conflict session), then merge. In Claude Code, the `merge-conflict-resolution` skill is the SOP.
+
 **No agent merges into the integration branch/`main` or deletes a branch without asking first** — every merge is a proposed PR, every deletion happens only after a user-approved merge.
 
 ---

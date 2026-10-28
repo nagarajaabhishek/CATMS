@@ -19,7 +19,7 @@ git commit -m "feat: short description ({id})"
 git push -u origin feat/{id}-short-description
 # Open PR → main on GitHub. Never bypass branch protection.
 
-# 4. Squash merge after review/CI, delete the branch
+# 4. Merge (merge commit, never squash) after review/CI, delete the branch
 ```
 
 ## Branch naming
